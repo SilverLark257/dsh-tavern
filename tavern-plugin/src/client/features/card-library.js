@@ -191,6 +191,8 @@
 			const [worldBookBusy, setWorldBookBusy] = React.useState(false);
 			const [worldBookError, setWorldBookError] = usePersistentError("世界书绑定");
 			const scriptFileRef = React.useRef(null);
+			const pngInputRef = React.useRef(null);
+			const [pngBusy, setPngBusy] = React.useState(false);
 			const worldBookDetailsRef = React.useRef(null);
 			const worldBookCatalogRequestRef = React.useRef(null);
 			const cardPath = props.view.card.path;
@@ -294,6 +296,57 @@
 					props.onSaved(res.card);
 					notifyTavernDataChanged(["cards", "sessions"], "cards");
 				} catch (err) { setError(String(err && err.message || err)); } finally { setBusy(false); }
+			}
+			// PNG/JPG/WebP → PNG bytes. PNG passes through untouched; the other two are
+			// redrawn at their own size. The card data rides in tEXt chunks, never pixels.
+			function imageFileAsPng(file) {
+				if (file.type === "image/png" || /\.png$/i.test(String(file.name || ""))) {
+					return file.arrayBuffer().then(function (buffer) { return new Uint8Array(buffer); });
+				}
+				return new Promise(function (resolve, reject) {
+					const url = URL.createObjectURL(file);
+					const image = new Image();
+					image.onload = function () {
+						URL.revokeObjectURL(url);
+						try {
+							const canvas = document.createElement("canvas");
+							canvas.width = image.naturalWidth || image.width;
+							canvas.height = image.naturalHeight || image.height;
+							if (!canvas.width || !canvas.height) throw new Error("图片尺寸无效，请换一张");
+							const context = canvas.getContext("2d");
+							if (!context) throw new Error("浏览器无法处理这张图片");
+							context.drawImage(image, 0, 0);
+							canvas.toBlob(function (blob) {
+								if (!blob) { reject(new Error("图片转换失败，请换一张")); return; }
+								blob.arrayBuffer().then(function (buffer) { resolve(new Uint8Array(buffer)); }, reject);
+							}, "image/png");
+						} catch (error) { reject(error); }
+					};
+					image.onerror = function () { URL.revokeObjectURL(url); reject(new Error("图片读取失败，请换一张")); };
+					image.src = url;
+				});
+			}
+			async function exportPng(file) {
+				if (!cardPath || pngBusy) return;
+				setPngBusy(true); setError("");
+				try {
+					if (!file) throw new Error("请选择一张图片");
+					if (file.size > 30 * 1024 * 1024) throw new Error("图片超过 30 MB，请换一张小一点的");
+					const cover = await imageFileAsPng(file);
+					if (cover.length > 30 * 1024 * 1024) throw new Error("转换后的图片超过 30 MB，请换一张小一点的");
+					// Build the PNG before touching the card: a bad image must not change the cover.
+					const exported = await call("exportCard", { path: cardPath });
+					const bytes = cardPngWithCard(cover, JSON.stringify(exported.document));
+					await call("setCardCover", { path: cardPath, imageB64: bytesToBase64(cover) });
+					const url = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+					const link = document.createElement("a");
+					link.href = url;
+					link.download = String(props.view.card.name || "人物卡").replace(/[\\/:*?"<>|\r\n]/g, "_") + ".png";
+					document.body.appendChild(link); link.click(); link.remove();
+					window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+					notifyTavernDataChanged(["cards"], "cards");
+				} catch (err) { setError(String(err && err.message || err)); }
+				finally { setPngBusy(false); }
 			}
 			async function importScriptFile(file) {
 				if (!cardPath || !file) return;
@@ -497,11 +550,16 @@
 				worldBookCatalogWarning ? h("div", { className: "dsh-card-error" }, worldBookCatalogWarning) : null
 			);
 			return h("aside", { className: "dsh-tavern-status" + (props.library ? " dsh-tavern-card-detail" : "") },
+				h("input", { ref: pngInputRef, type: "file", accept: "image/png,image/jpeg,image/webp", style: { display: "none" }, onChange: function (event) {
+					const file = event.target.files && event.target.files[0];
+					event.target.value = "";
+					if (file) void exportPng(file);
+				} }),
 				h("div", { className: "dsh-tavern-status-head" },
 					props.onBack ? h("button", { className: "dsh-tavern-btn", onClick: props.onBack }, "← 返回") : null,
 					h("div", { className: props.library ? "dsh-tavern-status-title" : "dsh-tavern-status-role" }, props.view.card.name),
 					h("div", { className: "dsh-tavern-question-sub" }, props.view.card.path ? props.view.card.path.split("/").pop() : ""),
-					props.library ? h("div", { className: "dsh-tavern-library-head-actions" }, props.onAttach ? h("button", { className: "dsh-tavern-btn", onClick: props.onAttach }, "在对话中引用") : null, h("button", { className: "dsh-tavern-btn", onClick: props.onRename }, "重命名"), h("button", { className: "dsh-tavern-btn", onClick: props.onExport, title: "SillyTavern 人物卡 JSON" }, "导出 JSON"), props.onExportCharx ? h("button", { className: "dsh-tavern-btn", onClick: props.onExportCharx, title: "Character Card V3，带头像、立绘、背景等角色素材" }, "导出 CHARX") : null, h("button", { className: "dsh-tavern-btn danger", onClick: props.onDelete }, "删除")) : null
+					props.library ? h("div", { className: "dsh-tavern-library-head-actions" }, props.onAttach ? h("button", { className: "dsh-tavern-btn", onClick: props.onAttach }, "在对话中引用") : null, h("button", { className: "dsh-tavern-btn", onClick: props.onRename }, "重命名"), h("button", { className: "dsh-tavern-btn", onClick: props.onExport, title: "SillyTavern 人物卡 JSON" }, "导出 JSON"), h("button", { className: "dsh-tavern-btn", disabled: busy || pngBusy, onClick: function () { if (pngInputRef.current) pngInputRef.current.click(); }, title: "选一张图片作为卡面，同时设为封面，并导出标准角色卡 PNG" }, pngBusy ? "导出中…" : "导出 PNG"), props.onExportCharx ? h("button", { className: "dsh-tavern-btn", onClick: props.onExportCharx, title: "Character Card V3，带头像、立绘、背景等角色素材" }, "导出 CHARX") : null, h("button", { className: "dsh-tavern-btn danger", onClick: props.onDelete }, "删除")) : null
 				),
 				props.organizationSettings,
 				scriptHero,

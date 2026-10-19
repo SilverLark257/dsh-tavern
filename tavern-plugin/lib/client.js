@@ -982,6 +982,131 @@ window.__ModuleLoader__.load({
 		  }
 		  return {from,update,get,rank,suffix,changed,info:source=>states.has(source)?{count:states.get(source)?.count||0,bytes:states.get(source)?.bytes||0,unsafe:states.get(source)?.unsafe||0}:null}
 		}
+		// Browser-safe PNG character card writer. Shared with the browser bundle
+		// (@include-domain): keep top-level names specific.
+		//
+		// A card PNG is the cover's pixels plus a `chara` and a `ccv3` tEXt chunk.
+		// This module is deliberately pure: it reads no files, uses no Node APIs and
+		// changes no Tavern state. It mirrors tavern-plugin/lib/domain/card-assets.js
+		// (pngCardTextChunk + pngWithTextChunks) so the browser and the host write the
+		// same bytes.
+
+		const cardPngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+		const cardPngTextTypes = ['tEXt', 'zTXt', 'iTXt']
+		const cardPngCrcTable = (function () {
+		  const table = new Uint32Array(256)
+		  for (let index = 0; index < 256; index++) {
+		    let value = index
+		    for (let bit = 0; bit < 8; bit++) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1
+		    table[index] = value >>> 0
+		  }
+		  return table
+		})()
+
+		function cardPngBytes(value) {
+		  if (value instanceof Uint8Array) return value
+		  if (value instanceof ArrayBuffer) return new Uint8Array(value)
+		  if (value && ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+		  throw new TypeError('PNG 数据必须是 Uint8Array 或 ArrayBuffer')
+		}
+
+		function cardPngAscii(value) {
+		  const text = String(value)
+		  const bytes = new Uint8Array(text.length)
+		  for (let index = 0; index < text.length; index++) bytes[index] = text.charCodeAt(index) & 0xff
+		  return bytes
+		}
+
+		function cardPngString(bytes, offset, length) {
+		  let text = ''
+		  for (let index = 0; index < length; index++) text += String.fromCharCode(bytes[offset + index])
+		  return text
+		}
+
+		function cardPngWriteUint32(target, offset, value) {
+		  const number = Number(value) >>> 0
+		  target[offset] = (number >>> 24) & 0xff
+		  target[offset + 1] = (number >>> 16) & 0xff
+		  target[offset + 2] = (number >>> 8) & 0xff
+		  target[offset + 3] = number & 0xff
+		}
+
+		function cardPngReadUint32(source, offset) {
+		  return ((source[offset] << 24) | (source[offset + 1] << 16) | (source[offset + 2] << 8) | source[offset + 3]) >>> 0
+		}
+
+		function cardPngCrc32(bytes) {
+		  let value = 0xffffffff
+		  for (let index = 0; index < bytes.length; index++) value = cardPngCrcTable[(value ^ bytes[index]) & 0xff] ^ (value >>> 8)
+		  return (value ^ 0xffffffff) >>> 0
+		}
+
+		function cardPngBase64(text) {
+		  const bytes = new TextEncoder().encode(String(text))
+		  let binary = ''
+		  // Chunked so a large card does not overflow the argument limit of apply().
+		  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+		    binary += String.fromCharCode.apply(null, bytes.subarray(offset, Math.min(bytes.length, offset + 0x8000)))
+		  }
+		  if (typeof btoa !== 'function') throw new Error('当前环境不支持 base64 编码')
+		  return btoa(binary)
+		}
+
+		function cardPngTextChunk(keyword, text) {
+		  const encoded = cardPngAscii(cardPngBase64(text))
+		  const name = cardPngAscii(keyword)
+		  const data = new Uint8Array(name.length + 1 + encoded.length)
+		  data.set(name, 0)
+		  data[name.length] = 0
+		  data.set(encoded, name.length + 1)
+		  const chunk = new Uint8Array(12 + data.length)
+		  cardPngWriteUint32(chunk, 0, data.length)
+		  chunk.set(cardPngAscii('tEXt'), 4)
+		  chunk.set(data, 8)
+		  cardPngWriteUint32(chunk, 8 + data.length, cardPngCrc32(chunk.subarray(4, 8 + data.length)))
+		  return chunk
+		}
+
+		function cardPngConcat(parts) {
+		  let length = 0
+		  for (const part of parts) length += part.length
+		  const output = new Uint8Array(length)
+		  let offset = 0
+		  for (const part of parts) { output.set(part, offset); offset += part.length }
+		  return output
+		}
+
+		/**
+		 * `png`'s pixels with its own text chunks dropped and the card written as
+		 * `chara` (legacy readers) and `ccv3` (SillyTavern's first choice).
+		 * @param {Uint8Array|ArrayBuffer} png
+		 * @param {string} cardText JSON text of the standard card document
+		 * @returns {Uint8Array}
+		 */
+		function cardPngWithCard(png, cardText) {
+		  const source = cardPngBytes(png)
+		  if (source.length <= 8) throw new Error('卡面不是有效的 PNG 图片')
+		  for (let index = 0; index < cardPngSignature.length; index++) {
+		    if (source[index] !== cardPngSignature[index]) throw new Error('卡面不是有效的 PNG 图片')
+		  }
+		  const text = String(cardText)
+		  const chunks = [cardPngTextChunk('chara', text), cardPngTextChunk('ccv3', text)]
+		  const parts = [source.subarray(0, 8)]
+		  let offset = 8
+		  while (offset + 12 <= source.length) {
+		    const length = cardPngReadUint32(source, offset)
+		    const type = cardPngString(source, offset + 4, 4)
+		    const end = offset + 12 + length
+		    if (end > source.length) throw new Error('卡面 PNG 数据损坏')
+		    if (type === 'IEND') {
+		      parts.push(chunks[0], chunks[1], source.subarray(offset, end))
+		      return cardPngConcat(parts)
+		    }
+		    if (!cardPngTextTypes.includes(type)) parts.push(source.subarray(offset, end))
+		    offset = end
+		  }
+		  throw new Error('卡面 PNG 缺少结束块')
+		}
 		// Cached session views are immutable, like the React views returned by getSession.
 		function createSessionViewReader(maxSessions = 4) {
 		  const sessions = new Map();
@@ -19272,6 +19397,8 @@ const worldBookSwitcherFeature = createWorldBookSwitcherFeatureModule();
 			const [worldBookBusy, setWorldBookBusy] = React.useState(false);
 			const [worldBookError, setWorldBookError] = usePersistentError("世界书绑定");
 			const scriptFileRef = React.useRef(null);
+			const pngInputRef = React.useRef(null);
+			const [pngBusy, setPngBusy] = React.useState(false);
 			const worldBookDetailsRef = React.useRef(null);
 			const worldBookCatalogRequestRef = React.useRef(null);
 			const cardPath = props.view.card.path;
@@ -19375,6 +19502,57 @@ const worldBookSwitcherFeature = createWorldBookSwitcherFeatureModule();
 					props.onSaved(res.card);
 					notifyTavernDataChanged(["cards", "sessions"], "cards");
 				} catch (err) { setError(String(err && err.message || err)); } finally { setBusy(false); }
+			}
+			// PNG/JPG/WebP → PNG bytes. PNG passes through untouched; the other two are
+			// redrawn at their own size. The card data rides in tEXt chunks, never pixels.
+			function imageFileAsPng(file) {
+				if (file.type === "image/png" || /\.png$/i.test(String(file.name || ""))) {
+					return file.arrayBuffer().then(function (buffer) { return new Uint8Array(buffer); });
+				}
+				return new Promise(function (resolve, reject) {
+					const url = URL.createObjectURL(file);
+					const image = new Image();
+					image.onload = function () {
+						URL.revokeObjectURL(url);
+						try {
+							const canvas = document.createElement("canvas");
+							canvas.width = image.naturalWidth || image.width;
+							canvas.height = image.naturalHeight || image.height;
+							if (!canvas.width || !canvas.height) throw new Error("图片尺寸无效，请换一张");
+							const context = canvas.getContext("2d");
+							if (!context) throw new Error("浏览器无法处理这张图片");
+							context.drawImage(image, 0, 0);
+							canvas.toBlob(function (blob) {
+								if (!blob) { reject(new Error("图片转换失败，请换一张")); return; }
+								blob.arrayBuffer().then(function (buffer) { resolve(new Uint8Array(buffer)); }, reject);
+							}, "image/png");
+						} catch (error) { reject(error); }
+					};
+					image.onerror = function () { URL.revokeObjectURL(url); reject(new Error("图片读取失败，请换一张")); };
+					image.src = url;
+				});
+			}
+			async function exportPng(file) {
+				if (!cardPath || pngBusy) return;
+				setPngBusy(true); setError("");
+				try {
+					if (!file) throw new Error("请选择一张图片");
+					if (file.size > 30 * 1024 * 1024) throw new Error("图片超过 30 MB，请换一张小一点的");
+					const cover = await imageFileAsPng(file);
+					if (cover.length > 30 * 1024 * 1024) throw new Error("转换后的图片超过 30 MB，请换一张小一点的");
+					// Build the PNG before touching the card: a bad image must not change the cover.
+					const exported = await call("exportCard", { path: cardPath });
+					const bytes = cardPngWithCard(cover, JSON.stringify(exported.document));
+					await call("setCardCover", { path: cardPath, imageB64: bytesToBase64(cover) });
+					const url = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+					const link = document.createElement("a");
+					link.href = url;
+					link.download = String(props.view.card.name || "人物卡").replace(/[\\/:*?"<>|\r\n]/g, "_") + ".png";
+					document.body.appendChild(link); link.click(); link.remove();
+					window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+					notifyTavernDataChanged(["cards"], "cards");
+				} catch (err) { setError(String(err && err.message || err)); }
+				finally { setPngBusy(false); }
 			}
 			async function importScriptFile(file) {
 				if (!cardPath || !file) return;
@@ -19578,11 +19756,16 @@ const worldBookSwitcherFeature = createWorldBookSwitcherFeatureModule();
 				worldBookCatalogWarning ? h("div", { className: "dsh-card-error" }, worldBookCatalogWarning) : null
 			);
 			return h("aside", { className: "dsh-tavern-status" + (props.library ? " dsh-tavern-card-detail" : "") },
+				h("input", { ref: pngInputRef, type: "file", accept: "image/png,image/jpeg,image/webp", style: { display: "none" }, onChange: function (event) {
+					const file = event.target.files && event.target.files[0];
+					event.target.value = "";
+					if (file) void exportPng(file);
+				} }),
 				h("div", { className: "dsh-tavern-status-head" },
 					props.onBack ? h("button", { className: "dsh-tavern-btn", onClick: props.onBack }, "← 返回") : null,
 					h("div", { className: props.library ? "dsh-tavern-status-title" : "dsh-tavern-status-role" }, props.view.card.name),
 					h("div", { className: "dsh-tavern-question-sub" }, props.view.card.path ? props.view.card.path.split("/").pop() : ""),
-					props.library ? h("div", { className: "dsh-tavern-library-head-actions" }, props.onAttach ? h("button", { className: "dsh-tavern-btn", onClick: props.onAttach }, "在对话中引用") : null, h("button", { className: "dsh-tavern-btn", onClick: props.onRename }, "重命名"), h("button", { className: "dsh-tavern-btn", onClick: props.onExport, title: "SillyTavern 人物卡 JSON" }, "导出 JSON"), props.onExportCharx ? h("button", { className: "dsh-tavern-btn", onClick: props.onExportCharx, title: "Character Card V3，带头像、立绘、背景等角色素材" }, "导出 CHARX") : null, h("button", { className: "dsh-tavern-btn danger", onClick: props.onDelete }, "删除")) : null
+					props.library ? h("div", { className: "dsh-tavern-library-head-actions" }, props.onAttach ? h("button", { className: "dsh-tavern-btn", onClick: props.onAttach }, "在对话中引用") : null, h("button", { className: "dsh-tavern-btn", onClick: props.onRename }, "重命名"), h("button", { className: "dsh-tavern-btn", onClick: props.onExport, title: "SillyTavern 人物卡 JSON" }, "导出 JSON"), h("button", { className: "dsh-tavern-btn", disabled: busy || pngBusy, onClick: function () { if (pngInputRef.current) pngInputRef.current.click(); }, title: "选一张图片作为卡面，同时设为封面，并导出标准角色卡 PNG" }, pngBusy ? "导出中…" : "导出 PNG"), props.onExportCharx ? h("button", { className: "dsh-tavern-btn", onClick: props.onExportCharx, title: "Character Card V3，带头像、立绘、背景等角色素材" }, "导出 CHARX") : null, h("button", { className: "dsh-tavern-btn danger", onClick: props.onDelete }, "删除")) : null
 				),
 				props.organizationSettings,
 				scriptHero,

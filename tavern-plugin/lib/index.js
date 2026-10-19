@@ -179,6 +179,7 @@ import { createCastPresentation } from './domain/cast-presentation.js'
 import { createCastAssets } from './domain/cast-assets.js'
 import { createSpeech } from './domain/speech.js'
 import { buildCharx, cardImport, cardImportFromCard, pngCardTextChunk, pngWithTextChunks } from './domain/card-assets.js'
+import { coverImageAsPng } from './domain/card-cover-image.js'
 import { createAssetPacks } from './domain/asset-packs.js'
 import { readCardArchive } from './domain/card-archive.js'
 import { openZipFile } from './domain/zip-file.js'
@@ -5179,6 +5180,17 @@ export async function apply(ctx) {
         if (workspace === undefined) throw new Error('人物卡不存在: ' + (args && args.path))
         const characterBook = await worldBooks.characterBookForCard(cardPath)
         return { document: cardPreparation.present({ card: workspace, as: 'sillytavern-v3', characterBook }) }
+      }
+      case 'setCardCover': {
+        const cardPath = normalizeResourcePath(args && args.path, 'card')
+        const encoded = String(args && args.imageB64 || '')
+        if (!encoded) throw new Error('缺少封面图片')
+        const image = Buffer.from(encoded, 'base64')
+        if (image.length === 0) throw new Error('封面图片为空')
+        if (image.length > 30 * 1024 * 1024) throw new Error('封面图片超过 30 MB，请换一张小一点的')
+        const png = await coverImageAsPng(image)
+        await fileResources.setCardCover(cardPath, png, async () => (await presentCardText(cardPath)).text)
+        return { path: cardPath, bytes: png.length }
       }
       case 'editLedger': { await ledgerEditor(args || {}); return { view: await sessionView(args.sessionId) } }
       case 'updateGuideLibrary': return { item: await guideLibrary.update(args) }

@@ -369,6 +369,7 @@ window.__ModuleLoader__.load({
 
 		// @include-domain indexed-array.js
 		// @include-domain ordered-numeric-index.js
+		// @include-domain card-png.js
 		// @include modules/session-view-sync.js
 		// @include modules/session-compat.js
 		const beginSessionViewRead = createSessionViewReader();
