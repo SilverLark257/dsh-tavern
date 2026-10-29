@@ -130,17 +130,24 @@
             const h = React.createElement;
             const busy = requestBusy || state?.phase === "running";
             const stage = {sessions:"正在检查会话日志迁移…",reading:"正在读取剧情与变量…",converting:"正在迁移存储并读回存档…",verifying:"正在校验剧情、变量和历史版本…"}[state?.stage] || "正在迁移…";
-            return h("section", {className:"dsh-tavern-status-section", "aria-label":"存档迁移"},
-                h("div", {className:"dsh-tavern-status-label"}, "存档迁移"),
-                h("div", {className:"dsh-tavern-status-empty"}, "统一迁移本局的会话日志与剧情存储，保留正文、变量、分支和历史版本。旧文件保留原样；迁移后的新进度写入新版存档。"),
-                busy ? h("div", {role:"status"}, stage + " 大存档可能需要较长时间，暂时不要关闭或重启酒馆。") : null,
-                error || state?.phase === "failed" ? h("div", {className:"dsh-card-error",role:"alert"}, error || state.error) : null,
-                state?.sessions?.warning && state.phase !== "failed" ? h("div", {className:"dsh-tavern-status-empty",role:"note"}, state.sessions.warning) : null,
-                state?.phase === "failed" && !state.sessions?.ready ? h("div", {className:"dsh-tavern-status-empty"}, "这局的旧会话日志暂时无法升级，原档已保留。请点「导出诊断文件」，把文件发给开发者（不含剧情正文）；修复发布后更新酒馆即可自动升级。想先接着玩，可以在左侧对话菜单「⋯」里用「存档救援」把剧情转到新对话。") : null,
-                state?.phase === "failed" && !state.sessions?.ready ? h("button", {type:"button",className:"dsh-tavern-btn",onClick:() => downloadSessionDiagnostics({}, props.sessionId).catch(err => setError("导出诊断文件失败：" + String(err.message || err)))}, "导出诊断文件") : null,
-                !state ? h("button", {className:"dsh-tavern-btn",onClick:()=>setRefresh(value=>value+1)}, "重新检查存档迁移") :
-                h("button", {type:"button",className:"dsh-tavern-btn",disabled:busy || props.busy,onClick:migrate}, busy ? "迁移中…" : state.phase === "failed" ? "重试迁移" : "迁移存档"),
-                !busy && props.busy ? h("div", {className:"dsh-tavern-status-empty"}, "请等待本轮游玩和后台结算完成后再迁移。") : null
+            return h("section", {className:"dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-info-card--save", "aria-label":"存档迁移"},
+                h("div", {className:"dsh-tavern-info-card-head"},
+                    h("span", {className:"dsh-tavern-info-card-icon","aria-hidden":true},
+                        h("svg", {viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"},
+                            h("path", {d:"M4 8h16v11H4z"}),
+                            h("path", {d:"M3 4.5h18V8H3z"}),
+                            h("path", {d:"M10 11.5h4"}))),
+                    h("span", {className:"dsh-tavern-info-card-title"}, "存档迁移")),
+                h("p", {className:"dsh-tavern-info-card-text"}, "统一迁移本局的会话日志与剧情存储，保留正文、变量、分支和历史版本。旧文件保留原样；迁移后的新进度写入新版存档。"),
+                busy ? h("p", {className:"dsh-tavern-info-card-text is-warn", role:"status"}, stage + " 大存档可能需要较长时间，暂时不要关闭或重启酒馆。") : null,
+                error || state?.phase === "failed" ? h("p", {className:"dsh-tavern-info-card-text is-error", role:"alert"}, error || state.error) : null,
+                state?.sessions?.warning && state.phase !== "failed" ? h("p", {className:"dsh-tavern-info-card-text", role:"note"}, state.sessions.warning) : null,
+                state?.phase === "failed" && !state.sessions?.ready ? h("p", {className:"dsh-tavern-info-card-text"}, "这局的旧会话日志暂时无法升级，原档已保留。请点「导出诊断文件」，把文件发给开发者（不含剧情正文）；修复发布后更新酒馆即可自动升级。想先接着玩，可以在左侧对话菜单「⋯」里用「存档救援」把剧情转到新对话。") : null,
+                !busy && props.busy ? h("p", {className:"dsh-tavern-info-card-text"}, "请等待本轮游玩和后台结算完成后再迁移。") : null,
+                h("div", {className:"dsh-tavern-info-card-actions"},
+                    state?.phase === "failed" && !state.sessions?.ready ? h("button", {type:"button",className:"dsh-tavern-btn dsh-tavern-info-card-btn",onClick:() => downloadSessionDiagnostics({}, props.sessionId).catch(err => setError("导出诊断文件失败：" + String(err.message || err)))}, "导出诊断文件") : null,
+                    !state ? h("button", {className:"dsh-tavern-btn dsh-tavern-info-card-btn",onClick:()=>setRefresh(value=>value+1)}, "重新检查存档迁移") :
+                    h("button", {type:"button",className:"dsh-tavern-btn dsh-tavern-info-card-btn",disabled:busy || props.busy,onClick:migrate}, busy ? "迁移中…" : state.phase === "failed" ? "重试迁移" : "迁移存档"))
             );
         }
 
@@ -308,12 +315,15 @@
 			const statusText = view.settleStatus === "running" ? "正在执行后台结算" : (view.settleStatus === "error" ? "后台结算失败" : "后台结算已完成");
 			// Edits apply by themselves: say what happened; only a legacy copy or a failure offers a button.
 			const cardUpdate = view.cardUpdate || {};
-			const cardReloadLine = cardUpdate.error ? { text: "检查人物卡更新失败：" + cardUpdate.error }
-				: cardUpdate.worldbookSyncRequired || cardUpdate.legacy ? { text: "旧存档的世界书副本需要手动同步一次", action: "同步人物卡和世界书" }
-				: cardUpdate.autoReloadError ? { text: "人物卡或世界书有变化，自动重新加载失败：" + cardUpdate.autoReloadError, action: "重试" }
-				: cardUpdate.autoReloading ? { text: "人物卡或世界书有变化，正在自动重新加载…" }
-				: cardUpdate.available && (cardUpdate.cardChanged || cardUpdate.worldbookChanged) ? { text: "人物卡或世界书有变化，空闲时自动重新加载" }
-				: view.cardAutoReload ? { text: "人物卡或世界书有变化，已自动重新加载（" + new Date(view.cardAutoReload.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + "）" }
+			const cardReloadAt = view.cardAutoReload && view.cardAutoReload.at
+				? new Date(view.cardAutoReload.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+				: "";
+			const cardReloadLine = cardUpdate.error ? { title: "人物卡检查", text: "检查人物卡更新失败：" + cardUpdate.error, tone: "error" }
+				: cardUpdate.worldbookSyncRequired || cardUpdate.legacy ? { title: "存档同步", text: "旧存档的世界书副本需要手动同步一次", action: "同步人物卡和世界书", tone: "warn" }
+				: cardUpdate.autoReloadError ? { title: "自动重载", text: "人物卡或世界书有变化，自动重新加载失败：" + cardUpdate.autoReloadError, action: "重试", tone: "error" }
+				: cardUpdate.autoReloading ? { title: "自动重载", text: "人物卡或世界书有变化，正在自动重新加载…", tone: "busy" }
+				: cardUpdate.available && (cardUpdate.cardChanged || cardUpdate.worldbookChanged) ? { title: "等待重载", text: "人物卡或世界书有变化，空闲时自动重新加载", tone: "busy" }
+				: view.cardAutoReload ? { title: "自动重载", text: "人物卡或世界书有变化，已自动重新加载", at: cardReloadAt, tone: "ok" }
 				: null;
 			return h("aside", { className: "dsh-tavern-status dsh-tavern-status-dashboard" },
 				h("div", { className: "dsh-tavern-status-head" },
@@ -326,18 +336,32 @@
 					h("div", { className: "dsh-tavern-status-settle" }, h("span", { className: "dsh-tavern-status-dot " + (view.settleStatus || "idle") }), statusText)
 				),
 					h("div", { className: "dsh-tavern-status-body" },
-						h("section", { className: "dsh-tavern-status-section dsh-tavern-status-support" },
-							h("span", null, "遇到问题？卡不能玩、显示异常、太卡太慢，或者有疑问，都可以交给调试 Agent。"),
+						h("section", { className: "dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-status-support dsh-tavern-info-card--support" },
+							h("div", { className: "dsh-tavern-info-card-head" },
+								h("span", { className: "dsh-tavern-info-card-icon", "aria-hidden": true },
+									h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" },
+										h("circle", { cx: 12, cy: 12, r: 9 }),
+										h("path", { d: "M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1.1.9-1.1 1.7v.3" }),
+										h("path", { d: "M12 16.7h.01" }))),
+								h("span", { className: "dsh-tavern-info-card-title" }, "遇到问题")),
+							h("p", { className: "dsh-tavern-info-card-text" }, "卡不能玩、显示异常、太卡太慢，或者有疑问，都可以交给调试 Agent。"),
 							h(TavernDebugButton, { sessionId: props.sessionId, turn: latestDebugTurn, className: "dsh-tavern-debug-open" })),
                         props.submitStage ? h(TavernStageStatus, { key: props.sessionId, sessionId: props.sessionId, submit: props.submitStage, choices: props.stageChoices, generating: running }) : null,
                         h(TavernBackgroundWait, {sessionId:props.sessionId, activity:view.activity}),
                         h(TavernBackgroundRunsLink, {sessionId:props.sessionId, open:() => props.openStyleTab("dsh-tavern:background-tasks")}),
                         h(TavernSaveUpgrade, {key:props.sessionId,sessionId:props.sessionId,busy:running || view.activity?.busy || view.settleStatus === "running"}),
-					["story", "script"].includes(view.mode || "story") && view.requestMode !== "sillytavern" && cardReloadLine ? h("section", { className: "dsh-tavern-status-section" },
-						h("div", { className: "dsh-tavern-card-reload" },
-							h("span", { className: "dsh-tavern-card-reload-notice", role: "status" }, cardReloadLine.text),
-							cardReloadLine.action ? h("button", { className: "dsh-tavern-btn", disabled: running || cardUpdateBusy || view.settleStatus === "running", onClick: applyUpdatedCard }, cardUpdateBusy ? "正在加载…" : cardReloadLine.action) : null
-						),
+					["story", "script"].includes(view.mode || "story") && view.requestMode !== "sillytavern" && cardReloadLine ? h("section", { className: "dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-card-reload dsh-tavern-info-card--reload" },
+						h("div", { className: "dsh-tavern-info-card-head" },
+							h("span", { className: "dsh-tavern-info-card-icon", "aria-hidden": true },
+								h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" },
+									h("path", { d: "M20 11.5A8 8 0 0 0 6 6.7L4 8.5" }),
+									h("path", { d: "M4 4.5v4h4" }),
+									h("path", { d: "M4 12.5a8 8 0 0 0 14 4.8l2-1.8" }),
+									h("path", { d: "M20 19.5v-4h-4" }))),
+							h("span", { className: "dsh-tavern-info-card-title" }, cardReloadLine.title),
+							cardReloadLine.at ? h("span", { className: "dsh-tavern-info-card-meta" }, cardReloadLine.at) : null),
+						h("p", { className: "dsh-tavern-info-card-text" + (cardReloadLine.tone ? " is-" + cardReloadLine.tone : ""), role: "status" }, cardReloadLine.text),
+						cardReloadLine.action ? h("button", { className: "dsh-tavern-btn dsh-tavern-info-card-btn", disabled: running || cardUpdateBusy || view.settleStatus === "running", onClick: applyUpdatedCard }, cardUpdateBusy ? "正在加载…" : cardReloadLine.action) : null,
 						cardUpdateError ? h("p", { className: "dsh-card-error", role: "alert" }, "未应用更新：" + cardUpdateError) : null
 					) : null,
 					h(TavernCardAppDock, { sessionId: props.sessionId }),
@@ -357,13 +381,17 @@
                         sessionId: props.sessionId, cursor: view.scriptProgress.cursor, total: view.scriptProgress.totalChunks, chunkSize: view.scriptProgress.chunkSize,
                         busy: running || view.activity?.busy || view.regenInProgress
                     }) : null,
-                    view.styleReferenceEnabled && view.styleReference ? h("section", { className: "dsh-tavern-status-section dsh-tavern-style-section" },
+                    view.styleReferenceEnabled && view.styleReference ? h("section", { className: "dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-style-section" },
                         // Only the source and the passage's opening show; the passage opens on click, the retry input on demand.
-                        h("div", { className: "dsh-tavern-style-head" },
-                            h("div", { className: "dsh-tavern-status-label" }, "最近一次文风联想"),
-                            view.styleReference.book ? h("span", { className: "dsh-tavern-style-source", title: "《" + view.styleReference.book + "》" + (view.styleReference.author || "") }, "《" + view.styleReference.book + "》" + (view.styleReference.author || "")) : null,
-                            styleEditing ? null : h("button", { type: "button", className: "dsh-tavern-style-retry", disabled: styleBusy || running || view.regenInProgress, onClick: () => setStyleEditing(true) }, styleBusy ? "保存中…" : "设置下轮偏好")),
+                        h("div", { className: "dsh-tavern-info-card-head" },
+                            h("span", { className: "dsh-tavern-info-card-icon", "aria-hidden": true },
+                                h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" },
+                                    h("path", { d: "M4 20c8 0 13.5-5.5 13.5-13V4.5H15C8.5 4.5 4 9.5 4 16v4z" }),
+                                    h("path", { d: "M4 20 13 11" }))),
+                            h("span", { className: "dsh-tavern-info-card-title" }, "最近一次文风联想"),
+                            styleEditing ? null : h("button", { type: "button", className: "dsh-tavern-info-card-action", disabled: styleBusy || running || view.regenInProgress, onClick: () => setStyleEditing(true) }, styleBusy ? "保存中…" : "设置下轮偏好")),
                         h("blockquote", { className: "dsh-tavern-style-reference" + (styleExpanded ? " is-expanded" : ""), title: styleExpanded ? "点击收起" : "点击展开全文", onClick: () => setStyleExpanded(value => !value) }, view.styleReference.quote),
+                        view.styleReference.book ? h("div", { className: "dsh-tavern-info-card-source dsh-tavern-info-card-source--attribution", title: "《" + view.styleReference.book + "》" + (view.styleReference.author || "") }, "— 《" + view.styleReference.book + "》" + (view.styleReference.author || "")) : null,
                         styleEditing ? h("div", { className: "dsh-tavern-guide-add" },
                             h("textarea", { className: "dsh-tavern-regen-input", rows: 2, maxLength: 500, autoFocus: true, value: styleDraft, "aria-label": "下轮文风偏好", placeholder: "要求（可选），例如：要金庸的打斗描写；不要鲁迅", onChange: event => setStyleDraft(event.target.value) }),
                             h("div", { className: "dsh-tavern-style-actions" },

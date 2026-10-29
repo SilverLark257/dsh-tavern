@@ -43,7 +43,10 @@ async function expand(source, seen) {
 
 export async function assembleTavernClient() {
   const template = normalized(await readFile(templatePath, 'utf8'))
-  const css = await readFile(path.join(root, 'tavern-plugin/lib/client-assets/tavern.css'), 'utf8')
+  const assetsDir = path.join(root, 'tavern-plugin/lib/client-assets')
+  const overlays = await Promise.all(['tavern-ui.css', 'tavern-fonts.css']
+    .map(file => readFile(path.join(assetsDir, file), 'utf8').catch(() => '')))
+  const css = [await readFile(path.join(assetsDir, 'tavern.css'), 'utf8'), ...overlays].join('\n')
   const brand = {}
   for (const name of ['logo', 'lockup', 'lockup-dark']) {
     const svg = await readFile(path.join(root, `tavern-plugin/lib/client-assets/${name}.svg`), 'utf8')

@@ -260,7 +260,22 @@
 				// Viewers without the execution lease still receive live variables. Legacy
 				// status panels read parent.Mvu; expose their Helper API below the executor.
 				+ (!preparationRuntime && input && input.helperContext && input.persistent === true && input.trustedCardMode === true ? '<script data-dsh-tavern-status-host>(function(){const release=(' + installTavernTrustedHostFacade.toString() + ')(window.parent,window,-0.5,["Mvu"]);window.addEventListener("pagehide",release,{once:true});window.addEventListener("unload",release,{once:true});})();<\/script>' : '')
-				+ '</head><body class="no-blur">' + (input && input.helperContext ? '<script data-dsh-tavern-legacy-composer>const createTavernFrameLifecycle=' + createTavernFrameLifecycle.toString() + ';(' + installLegacyTavernComposer.toString() + ')();<\/script>' : '') + (preparationRuntime ? preparationRuntime.body : '') + frameHtml + sizingRuntime + layoutNormalizer + (input && input.persistent ? "" : textColorRuntime) + reporter + '<script data-dsh-tavern-touch>(' + installTavernFrameTouch.toString() + ')(' + token + ',' + scrollTavernTouchChain.toString() + ');<\/script>' + readyReporter + '</body></html>';
+				+ '</head><body class="no-blur">' + (input && input.helperContext ? '<script data-dsh-tavern-legacy-composer>const createTavernFrameLifecycle=' + createTavernFrameLifecycle.toString() + ';(' + installLegacyTavernComposer.toString() + ')();<\/script>' : '') + (preparationRuntime ? preparationRuntime.body : '') + frameHtml + (input && input.persistent === true ? '<style data-dsh-tavern-status-theme>'
+					+ 'html,body{background:transparent!important;color:#2E2921!important;font-family:"LXGW WenKai","Noto Serif SC","Songti SC","STSong",serif!important;font-size:13px!important;line-height:1.85!important}'
+					+ 'body>.panel{padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}'
+					+ 'body>.panel .title{border-bottom:1px solid rgba(62,52,38,.10)!important;padding-bottom:8px!important;margin-bottom:8px!important}'
+					+ 'body>.panel .title b{font-family:inherit!important;font-size:15px!important;font-weight:600!important;letter-spacing:.04em!important;color:#2E2921!important}'
+					+ 'body>.panel .title span{font-size:12px!important;color:#A79D8C!important}'
+					+ 'body>.panel .grid{grid-template-columns:1fr!important;gap:0!important}'
+					+ 'body>.panel .card{background:transparent!important;border:0!important;border-top:1px solid rgba(62,52,38,.10)!important;border-radius:0!important;padding:12px 0 8px!important}'
+					+ 'body>.panel .card h4{font-family:inherit!important;font-size:11px!important;font-weight:500!important;letter-spacing:.14em!important;color:#A79D8C!important;margin:0 0 8px!important}'
+					+ 'body>.panel .row{display:flex!important;justify-content:space-between!important;gap:16px!important;font-size:13px!important;color:#6F6759!important;line-height:1.7!important}'
+					+ 'body>.panel .row span{color:#A79D8C!important;flex:none!important;width:34px!important}'
+					+ 'body>.panel .row em{color:#2E2921!important;font-style:normal!important;text-align:right!important;line-height:1.7!important}'
+					+ 'body>.panel .bar{background:#F5F0E8!important}'
+					+ 'body>.panel .quote{border-left:2px solid rgba(62,52,38,.16)!important;color:#6F6759!important}'
+					+ 'body>.panel .empty{color:#A79D8C!important}'
+					+ '</style>' : '') + sizingRuntime + layoutNormalizer + (input && input.persistent ? "" : textColorRuntime) + reporter + '<script data-dsh-tavern-touch>(' + installTavernFrameTouch.toString() + ')(' + token + ',' + scrollTavernTouchChain.toString() + ');<\/script>' + readyReporter + '</body></html>';
 		}
 
         function startTavernHelperLoader(source) {

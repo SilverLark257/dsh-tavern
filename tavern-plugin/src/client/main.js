@@ -30,6 +30,11 @@ window.__ModuleLoader__.load({
 		}
 		markTavernShellActive();
 
+		// @include modules/layout-defaults.js
+		// 右栏默认宽度归一化 + 左栏宽度 CSS 变量（宿主布局 store 没有公开的宽度 setter）。
+		installTavernLayoutDefaults();
+
+
 
 		function isPlayMode(mode) {
 			return mode === "story" || mode === "script";

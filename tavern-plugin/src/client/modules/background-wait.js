@@ -37,8 +37,14 @@ function TavernBackgroundWait(props) {
     }, [active, props.sessionId, props.activity?.operationId]);
     const message = backgroundWaitMessage(progress || {phase:"preparing",startedAt:props.activity?.updatedAt || now}, now);
     if (!active || !message) return null;
-    return React.createElement("div", {className:"dsh-tavern-status-section", role:"status"},
-        React.createElement("p", null, message),
+    return React.createElement("div", {className:"dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-info-card--wait", role:"status"},
+        React.createElement("div", {className:"dsh-tavern-info-card-head"},
+            React.createElement("span", {className:"dsh-tavern-info-card-icon", "aria-hidden":true},
+                React.createElement("svg", {viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round"},
+                    React.createElement("circle", {cx:12, cy:12, r:9}),
+                    React.createElement("path", {d:"M12 7.5v5l3 1.8"}))),
+            React.createElement("span", {className:"dsh-tavern-info-card-title"}, "后台进行中")),
+        React.createElement("p", {className:"dsh-tavern-info-card-text"}, message),
         React.createElement(TavernStopBackgroundAction, {sessionId:props.sessionId}));
 }
 const BACKGROUND_RUN_STATUS = { queued: "排队中", running: "运行中", completed: "完成", discarded: "已作废", failed: "失败", cancelled: "已取消", skipped: "跳过（功能没开）" };
@@ -275,13 +281,27 @@ function TavernBackgroundTasksTab(props) {
                 catalog.map(item => h(TavernBackgroundTaskSpec, { key: item.task, item, members })),
                 h("p", { className: "dsh-tavern-settings-desc" }, "成员：书记、润色师等是每局常驻的后台 Agent，保留历史；临时 Agent 每次新开，可同时运行。")) : null));
 }
-// One line in 酒馆状态 that opens the page.
+// One card in 酒馆状态 that opens the page.
 function TavernBackgroundRunsLink(props) {
     const h = React.createElement;
     const { runs } = useTavernBackgroundRuns(props.sessionId);
-    return h("section", { className: "dsh-tavern-status-section dsh-tavern-background-runs-link" },
-        h("button", { type: "button", onClick: props.open },
-            h("span", { className: "dsh-tavern-status-label" }, "后台任务"),
-            h("span", null, (runs && backgroundRunsSummary(runs)) || "空闲"),
-            h("span", null, "打开 ↗")));
+    const list = runs || [];
+    const active = list.filter(run => run.status === "queued" || run.status === "running");
+    const failed = list.filter(run => run.status === "failed");
+    const summary = runs === null ? "正在读取…" : backgroundRunsSummary(runs);
+    const tone = runs === null ? "" : active.length ? "busy" : failed.length ? "error" : "idle";
+    const status = runs === null ? "正在读取…" : summary || "空闲 · 队列无积压";
+    return h("section", { className: "dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-background-runs-link" },
+        h("div", { className: "dsh-tavern-info-card-head" },
+            h("span", { className: "dsh-tavern-info-card-icon", "aria-hidden": true },
+                h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" },
+                    h("path", { d: "M3 12h3.4l2.4-6 4 12 2.4-6H21" }))),
+            h("span", { className: "dsh-tavern-info-card-title" }, "后台任务"),
+            h("button", { type: "button", className: "dsh-tavern-info-card-action", onClick: props.open },
+                "打开",
+                h("svg", { className: "dsh-tavern-info-card-arrow", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+                    h("path", { d: "M7 17 17 7M8 7h9v9" })))),
+        h("div", { className: "dsh-tavern-info-card-body" },
+            h("span", { className: "dsh-tavern-info-card-dot " + tone }),
+            h("span", { className: "dsh-tavern-info-card-status" }, status)));
 }

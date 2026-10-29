@@ -646,7 +646,15 @@ function TavernStageEntry(props) {
 		props.header ? h("button", { type: "button", className: "dsh-tavern-btn dsh-tavern-stage-toggle", title: "全屏舞台", "aria-label": "舞台", onClick: open },
 			h("svg", { viewBox: "0 0 24 24", width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" },
 				h("path", { d: "M3.5 4.5h17M5 4.5c0 4 1.8 6.5 4.5 7.5M19 4.5c0 4-1.8 6.5-4.5 7.5M3.5 19.5h17M7 19.5v-3.5h10v3.5" })),
-			h("span", null, "舞台")) : h("button", { type: "button", className: "dsh-tavern-btn", onClick: open }, "全屏舞台"),
+			h("span", null, "舞台")) : h("div", { className: "dsh-tavern-info-card-head" },
+				h("span", { className: "dsh-tavern-info-card-icon", "aria-hidden": true },
+					h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" },
+						h("path", { d: "M3.5 4.5h17M5 4.5c0 4 1.8 6.5 4.5 7.5M19 4.5c0 4-1.8 6.5-4.5 7.5M3.5 19.5h17M7 19.5v-3.5h10v3.5" }))),
+				h("span", { className: "dsh-tavern-info-card-title" }, "舞台"),
+				h("button", { type: "button", className: "dsh-tavern-info-card-action", onClick: open },
+					"全屏舞台",
+					h("svg", { className: "dsh-tavern-info-card-arrow", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+						h("path", { d: "M7 17 17 7M8 7h9v9" })))),
 		opened ? require("react-dom").createPortal(h(TavernStageScreen, { ...props, onClose: close }), document.body) : null);
 }
 
@@ -654,5 +662,5 @@ function TavernStageEntry(props) {
 function TavernStageStatus(props) {
 	const stage = useTavernStageRuntime(props.sessionId);
 	if (!stage.data || stage.data.enabled === false) return null;
-	return React.createElement("section", { className: "dsh-tavern-status-section", "aria-label": "舞台" }, React.createElement(TavernStageEntry, props));
+	return React.createElement("section", { className: "dsh-tavern-status-section dsh-tavern-info-card dsh-tavern-info-card--stage", "aria-label": "舞台" }, React.createElement(TavernStageEntry, props));
 }

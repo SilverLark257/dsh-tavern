@@ -1,0 +1,1882 @@
+/* ==========================================================================
+   DSH Tavern · 界面重构覆盖层
+   目标：与 dsh-tavern-redesign.html 逐项对齐（颜色/字体/间距/圆角/阴影/组件）
+   本文件在构建时追加在 tavern.css 之后，只做覆盖，不修改原文件。
+   章节：0 tokens / 1 全局 / 2 左栏 / 3 中栏 / 4 右栏
+   ========================================================================== */
+
+/* ---- 0. Design Tokens（逐字取自设计稿 :root） ---- */
+:root {
+  --bg:            #FAF9F5;
+  --bg-raised:     #FFFDF8;
+  --bg-sunken:     #F5F0E8;
+  --bg-inset:      #F5F0E8;
+  --text-primary:  #2E2921;
+  --text-secondary:#6F6759;
+  --text-muted:    #A79D8C;
+  --border:        rgba(62,52,38,.10);
+  --border-strong: rgba(62,52,38,.16);
+  --accent:        #CC785C;
+  --accent-hover:  #A9583E;
+  --accent-soft:   rgba(204,120,92,.12);
+  --accent-ring:   rgba(204,120,92,.34);
+  --on-accent:     #FFF9F2;
+
+  --font-sans: "Inter","-apple-system","BlinkMacSystemFont","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  --font-serif: "LXGW WenKai","Noto Serif SC","Songti SC","STSong","Source Han Serif SC","SimSun",serif;
+  --font-mono: "JetBrains Mono","SF Mono","SFMono-Regular",Consolas,monospace;
+
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+  --warm-ink-rgb: 62,52,38;
+  --accent-rgb: 204,120,92;
+  --white-rgb: 255,255,255;
+  --live-green: #7BA05B;
+  --sidebar-fill: #FAF9F5;
+  --live-green-rgb: 123,160,91;
+  --raised-rgb: 255,253,248;
+
+  /* 玻璃卡片材质 */
+  --glass:      linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.42));
+  --glass-hi:   rgba(255,255,255,.75);
+  --glass-edge: rgba(255,255,255,.65);
+  --glass-shadow: 0 1px 2px rgba(62,52,38,.05), 0 4px 14px -6px rgba(62,52,38,.10);
+}
+
+/* ---- 1. 全局：宿主主题变量改为设计稿色板 ---- */
+body {
+  --dsw-alias-brand-primary: var(--accent) !important;
+  --dsw-alias-brand-text: var(--on-accent) !important;
+  --dsw-alias-bg-base: var(--bg) !important;
+  --dsw-alias-bg-layer-1: var(--bg-raised) !important;
+  --dsw-alias-bg-layer-2: var(--bg-raised) !important;
+  --dsw-alias-bg-layer-3: var(--bg-raised) !important;
+  --dsw-alias-bg-module-platform: var(--bg) !important;
+  --dsw-alias-bg-overlay: var(--bg-raised) !important;
+  --dsw-alias-label-primary: var(--text-primary) !important;
+  --dsw-alias-label-secondary: var(--text-secondary) !important;
+  --dsw-alias-label-tertiary: var(--text-muted) !important;
+  --dsw-alias-border-l1: var(--border) !important;
+  --dsw-alias-border-l2: var(--border-strong) !important;
+  --dsw-alias-border-l3: var(--border-strong) !important;
+  --dsw-specific-sidebar-fill: var(--sidebar-fill) !important;
+  --dsw-specific-input-major: var(--bg-raised) !important;
+  --dsw-alias-button-primary-hover: var(--accent-hover) !important;
+  --dsw-alias-interactive-bg-hover: rgba(var(--warm-ink-rgb),.05) !important;
+  --dsw-alias-interactive-bg-active: rgba(var(--accent-rgb),.14) !important;
+  --dsw-alias-interactive-bg-selected: var(--accent-soft) !important;
+  --dsw-alias-markdown-code-block: var(--bg-inset) !important;
+  --dsw-alias-markdown-inline-code: var(--bg-sunken) !important;
+  --dsw-alias-state-business-primary: var(--accent) !important;
+
+  --dsh-tavern-radius-sm: 6px;
+  --dsh-tavern-radius-md: 10px;
+  --dsh-tavern-radius-lg: 14px;
+  --dsh-tavern-font-sans: var(--font-sans);
+  --dsh-tavern-font-display: var(--font-serif);
+
+  background-color: var(--bg) !important;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+::selection { background: var(--accent-soft); }
+
+body ::-webkit-scrollbar { width: 8px; height: 8px; }
+body ::-webkit-scrollbar-thumb { background: rgba(var(--warm-ink-rgb),.14); border-radius: 8px; }
+body ::-webkit-scrollbar-thumb:hover { background: rgba(var(--warm-ink-rgb),.24); }
+body ::-webkit-scrollbar-track { background: transparent; }
+
+/* ==========================================================================
+   3. 中栏
+   ========================================================================== */
+
+/* 3.1 顶栏：衬线页标题 + 图标徽章组 */
+[data-slot="conversation.session.header"] [class*="_titleRow"] {
+  padding: 14px 28px 0;
+  align-items: center;
+}
+[data-slot="conversation.session.header"] [class*="_titleCluster"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+[data-slot="conversation.session.header"] [class*="_crumbs"],
+[data-slot="conversation.session.header"] [class*="_crumbSeg"],
+[data-slot="conversation.session.header"] [class*="_crumb"] {
+  max-width: none !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap;
+}
+[data-slot="conversation.session.header"] [class*="_crumbs"],
+[data-slot="conversation.session.header"] [class*="_crumbs"] * {
+  font-family: var(--font-serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: .045em !important;
+  color: var(--text-primary) !important;
+}
+[data-slot="conversation.session.header"] [class*="_crumb"] {
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* 操作按钮 = 24px 图标方块 + 13px 文字 的胶囊 chip */
+.dsh-tavern-header-items { display: flex; align-items: center; gap: 4px; }
+.dsh-tavern-header-item { display: flex; align-items: center; }
+.dsh-tavern-header-item .dsh-tavern-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 32px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  transition: background .15s ease-out, border-color .15s ease-out, color .15s ease-out;
+}
+.dsh-tavern-header-item .dsh-tavern-btn > svg {
+  width: 24px; height: 24px;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  transition: background .15s ease-out, color .15s ease-out;
+}
+.dsh-tavern-header-item .dsh-tavern-btn:hover {
+  background: var(--bg-raised);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.dsh-tavern-header-item .dsh-tavern-btn:hover > svg {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.dsh-tavern-header-action-label { font-size: 13px; font-weight: 500; }
+
+/* 酒馆状态：活着的呼吸绿点 */
+.dsh-tavern-header-settings::after {
+  content: ""; flex: none;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--live-green);
+  box-shadow: 0 0 0 0 rgba(var(--live-green-rgb),.5);
+  animation: tv-live-pulse 2.4s ease-out infinite;
+}
+@keyframes tv-live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--live-green-rgb),.55); }
+  70% { box-shadow: 0 0 0 4px rgba(var(--live-green-rgb),0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--live-green-rgb),0); }
+}
+
+/* 3.2 tab 栏：陶土 2px 下划线 */
+[data-slot="conversation.session.header"] [class*="_tabs"] {
+  display: flex;
+  gap: 30px;
+  margin: 6px 28px 0;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+[data-slot="conversation.session.header"] button[class*="_tab"] {
+  position: relative;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary);
+  padding: 10px 0 11px !important;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: color .15s ease-out;
+}
+[data-slot="conversation.session.header"] button[class*="_tab"]:hover { color: var(--text-primary); }
+[data-slot="conversation.session.header"] button[class*="_tabActive"] {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+[data-slot="conversation.session.header"] button[class*="_tabActive"]::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+/* 3.3 消息流：衬线正文 15.5 / 行高 1.95 / 字距 .01em / 两端对齐 */
+[data-slot="conversation.chat.flow"] { padding: 28px 40px 12px; }
+.dsh-tavern-assistant { max-width: 780px; margin: 0 auto; }
+.dsh-tavern-assistant [class*="_markdown_"],
+.dsh-tavern-assistant [class*="_markdown_"] p,
+.dsh-tavern-assistant [class*="_markdown_"] li {
+  font-family: var(--font-serif);
+  font-size: 15.5px;
+  line-height: 1.95;
+  letter-spacing: .01em;
+  color: var(--text-primary);
+  text-align: justify;
+}
+.dsh-tavern-assistant [class*="_markdown_"] p { margin: 0 0 1em; }
+.dsh-tavern-assistant [class*="_markdown_"] p:last-child { margin-bottom: 0; }
+.dsh-tavern-assistant [class*="_markdown_"] strong { font-weight: 600; color: var(--text-primary); }
+
+/* 用户输入：按设计稿语言延伸（设计稿未画） */
+.dsh-tavern-user-row { max-width: 780px; margin: 0 auto 20px; }
+.dsh-tavern-user-bubble {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+/* 3.4 输入坞 */
+[data-composer-seat] { padding: 8px 40px 6px; }
+[data-composer-card] {
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: none !important;
+  transition: border-color .15s ease-out;
+}
+[data-composer-card]:focus-within { border-color: var(--accent-ring) !important; }
+
+/* 输入卡宽度与设计稿一致 */
+[data-composer-card] {
+  max-width: 780px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+[data-composer-card] [contenteditable="true"] {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: var(--text-primary) !important;
+  padding: 14px 16px 4px !important;
+}
+[data-composer-card] [data-composer-placeholder] { font-size: 15px !important; }
+
+/* 工具按钮 */
+[data-composer-card] .uV2eYG_add {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--r-sm) !important;
+}
+[data-composer-card] .uV2eYG_add:hover,
+[data-composer-card] .iWlSmW_trigger:hover,
+[data-composer-card] [class*="_7KE1Ra_trigger"]:hover { background: var(--bg-sunken) !important; color: var(--text-primary) !important; }
+[data-composer-card] .iWlSmW_trigger,
+[data-composer-card] [class*="_7KE1Ra_trigger"] { font-size: 13px !important; color: var(--text-secondary) !important; }
+
+/* 发送键：陶土色 34px 圆角方形（禁止圆形/渐变） */
+[data-composer-card] .uV2eYG_primary {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: var(--r-md) !important;
+  background: var(--accent) !important;
+  background-image: none !important;
+  color: var(--on-accent) !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  transition: background .15s ease-out;
+}
+[data-composer-card] .uV2eYG_primary:hover { background: var(--accent-hover) !important; }
+[data-composer-card] .uV2eYG_primary:disabled { opacity: .45; }
+[data-composer-card] .uV2eYG_primary svg { width: 16px; height: 16px; }
+
+/* ==========================================================================
+   2. 左栏
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+.dsh-tavern-sidebar {
+  padding: 14px 12px !important;
+  gap: 4px;
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(var(--accent-rgb),.055), transparent 60%),
+    linear-gradient(180deg, var(--sidebar-fill) 0%, var(--bg) 38%) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+/* 2.1 logo 行：作者原版手绘 lockup（D030 恢复作者标志，尺寸按原版 715:200 比例） */
+.dsh-tavern-side-head {
+  height: auto !important;
+  padding: 10px 10px 14px !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dsh-tavern-side-brand {
+  flex: 1 1 auto !important;
+  margin-right: 0 !important;
+  height: 52px !important;
+  min-width: 0;
+}
+
+/* 2.1b 宿主 / better-sidebar 的「底部工作台」兜底入口
+   （会话为 blank 且右栏收起时出现，默认 fixed 在 4,4，会压住品牌 logo）。
+   不删功能、只挪位置：停到左栏底部版本号上方，安静待着；hover 恢复不透明。 */
+body.dsh-tavern-shell-active [data-dsh-dock-fallback] {
+  top: auto !important;
+  bottom: 56px !important;
+  left: 14px !important;
+  opacity: .5;
+  transition: opacity .15s ease-out;
+}
+body.dsh-tavern-shell-active [data-dsh-dock-fallback]:hover { opacity: 1; }
+
+/* 2.2 分段控件（重量 2：玻璃容器 + 白色浮起药丸）
+   设计走向：故事卡最轻（磨砂玻璃）→ 分段控件中等 → CTA 全栏唯一实心陶土。
+   药丸用 88% 白而不是死白，在玻璃底上不出现生硬边缘（材质一致性）。 */
+.dsh-tavern-mode-switch {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 3px !important;
+  height: auto !important;
+  margin: 0 2px 12px !important;
+  padding: 3px !important;
+  background: rgba(var(--white-rgb),.34) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+  border: 1px solid rgba(var(--white-rgb),.55) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: inset 0 1px 0 rgba(var(--white-rgb),.5);
+}
+.dsh-tavern-mode-switch button {
+  position: relative;
+  height: 30px !important;
+  min-height: 0 !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: var(--r-sm) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  transition: background .16s ease-out, color .16s ease-out, box-shadow .16s ease-out;
+}
+.dsh-tavern-mode-switch button:hover { color: var(--text-primary) !important; }
+.dsh-tavern-mode-switch button.active {
+  background: rgba(255,255,255,.88) !important;
+  color: var(--accent-hover) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.06), 0 2px 8px -2px rgba(var(--warm-ink-rgb),.16) !important;
+}
+/* 旧版下划线 tab 的标记在分段控件里必须消失 */
+.dsh-tavern-mode-switch button.active::after { content: none !important; }
+
+/* 2.3 主 CTA（重量 3：全栏唯一实心陶土）
+   三处工艺：① 加号装进 20px 半透明白圆徽章；② hover 浮起 1px + 陶土光晕 + 箭头前移 2px；
+   ③ 顶部 40% 白釉面光泽线（实心色块最容易显得平）。 */
+.dsh-tavern-side-new {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  height: auto !important;
+  min-height: 44px !important;
+  margin: 0 2px 14px !important;
+  padding: 0 12px 0 10px !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: var(--r-md) !important;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  box-shadow: 0 1px 1px rgba(120,52,24,.18), 0 4px 12px -4px rgba(var(--accent-rgb),.45) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em !important;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease-out, box-shadow .16s ease-out, background .16s ease-out;
+}
+.dsh-tavern-side-new::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 40%;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: linear-gradient(180deg, rgba(var(--white-rgb),.26), rgba(var(--white-rgb),0));
+  pointer-events: none;
+}
+.dsh-tavern-side-new:hover {
+  background: var(--accent-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 2px rgba(120,52,24,.16), 0 10px 22px -8px rgba(var(--accent-rgb),.58) !important;
+}
+.dsh-tavern-side-new:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(120,52,24,.20) !important;
+}
+.dsh-tavern-side-new:disabled {
+  opacity: .55;
+  cursor: default;
+  transform: none;
+}
+.dsh-tavern-side-new-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(var(--white-rgb),.22);
+  box-shadow: inset 0 0 0 1px rgba(var(--white-rgb),.28);
+}
+.dsh-tavern-side-new-icon { width: 12px; height: 12px; color: var(--on-accent); }
+.dsh-tavern-side-new-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-side-new-arrow {
+  flex: none;
+  width: 15px; height: 15px;
+  opacity: .9;
+  transition: transform .16s ease-out;
+}
+.dsh-tavern-side-new:hover .dsh-tavern-side-new-arrow { transform: translateX(2px); }
+
+/* 2.4 节标题 */
+.dsh-tavern-side-title {
+  margin: 0 !important;
+  padding: 2px 12px 8px !important;
+  font-size: 12px !important;
+  letter-spacing: .05em !important;
+  color: var(--text-muted) !important;
+}
+/* 左侧历史标题行：字距加宽 + 一条极淡的分隔发丝线（安静的结构感，不抢 CTA） */
+.dsh-tavern-history-heading {
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 10px 8px 12px !important;
+  margin-bottom: 2px !important;
+  border-bottom: 1px solid rgba(var(--warm-ink-rgb),.06);
+}
+.dsh-tavern-history-heading > span {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: .12em !important;
+  color: var(--text-muted) !important;
+}
+.dsh-tavern-history-heading .dsh-tavern-history-action {
+  font-size: 11.5px !important;
+  letter-spacing: .08em !important;
+}
+.dsh-tavern-history-action {
+  font-size: 12px !important;
+  letter-spacing: .05em !important;
+  color: var(--text-muted) !important;
+  padding: 2px 4px !important;
+  border-radius: var(--r-sm) !important;
+}
+.dsh-tavern-history-action:hover { color: var(--accent) !important; background: transparent !important; }
+
+/* 2.5 列表与玻璃故事卡 */
+.dsh-tavern-side-list { gap: 8px !important; padding: 2px 2px 8px !important; }
+
+.dsh-tavern-history-group {
+  position: relative;
+  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  transition: border-color .15s ease-out, background .15s ease-out;
+}
+.dsh-tavern-history-group::before {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-hi), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.dsh-tavern-history-group:hover { border-color: rgba(var(--accent-rgb),.30); }
+.dsh-tavern-history-group.active {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.11), rgba(var(--white-rgb),.42));
+  border-color: var(--accent-ring);
+}
+/* 「⋯」对话操作菜单是卡片内的绝对定位层：卡片默认 overflow:hidden 会把它裁掉，
+   并且后面的卡片会盖住它。菜单打开的那一张放开裁剪并抬到同层最上面。 */
+.dsh-tavern-history-group:has(.dsh-tavern-side-row-menu) {
+  overflow: visible;
+  z-index: 6;
+}
+
+.dsh-tavern-history-group-toggle {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 12px 11px 14px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  text-align: left;
+  cursor: pointer;
+}
+.dsh-tavern-history-group-toggle:hover { background: transparent !important; }
+.dsh-tavern-history-group-name {
+  order: 1;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em;
+  color: var(--text-primary) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-history-group.active .dsh-tavern-history-group-name { color: var(--accent-hover) !important; }
+.dsh-tavern-history-group-chev {
+  order: 2;
+  display: flex;
+  width: 13px; height: 13px;
+  flex: none;
+  color: var(--text-muted);
+  transition: transform .18s ease-out;
+}
+.dsh-tavern-history-group-chev svg { width: 13px; height: 13px; }
+.dsh-tavern-history-group.open .dsh-tavern-history-group-chev { transform: rotate(180deg); }
+.dsh-tavern-history-group-sub {
+  order: 3;
+  flex-basis: 100%;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 展开后的版本记录 */
+.dsh-tavern-history-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 12px 10px 14px !important;
+}
+.dsh-tavern-history-group-items::before {
+  content: "";
+  display: block;
+  margin-bottom: 9px;
+  border-top: 1px solid rgba(var(--white-rgb),.65);
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row { border-radius: var(--r-sm); display: flex; align-items: center; }
+.dsh-tavern-history-group-items .dsh-tavern-side-row-main {
+  display: flex !important;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px !important;
+  border-radius: var(--r-sm);
+  text-align: left;
+  transition: background .12s ease-out, color .12s ease-out;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-main::before {
+  content: "";
+  flex: none;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: .6;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-main:hover { background: rgba(var(--white-rgb),.55); }
+.dsh-tavern-history-group-items .dsh-tavern-side-row.active .dsh-tavern-side-row-main::before {
+  background: var(--accent);
+  opacity: 1;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-serif) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: .01em;
+  color: var(--text-secondary) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row.active .dsh-tavern-side-row-name {
+  color: var(--accent-hover) !important;
+  font-weight: 500 !important;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-meta {
+  display: flex;
+  flex: none;
+  gap: 0;
+  margin-top: 0 !important;
+  color: var(--text-muted);
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-meta > span:first-child { display: none; }
+.dsh-tavern-history-group-items .dsh-tavern-side-row-meta > span:last-child {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row-more {
+  flex: none;
+  width: 24px; height: 24px;
+  color: var(--text-muted);
+}
+
+/* 2.6 底部：版本号 */
+.dsh-tavern-update { margin-top: auto; padding: 10px 2px 2px !important; border-top: 1px solid var(--border); }
+.dsh-tavern-update-identity { font-size: 12px !important; color: var(--text-muted) !important; letter-spacing: .02em; }
+.dsh-tavern-update-button { font-size: 11px !important; color: var(--text-muted) !important; }
+}
+
+
+/* ==========================================================================
+   4. 右栏
+   ========================================================================== */
+
+/* 4.1 三栏宽度：默认 左 280 / 中 1fr / 右 336 —— **可拖动**
+   早先这里用 !important 把宿主的 grid-template-columns 与面板内联 width 钉死，
+   代价是三根把手全部失效（拖动只改内联样式，视觉被 !important 压住）。
+   现在改成：默认宽度由客户端脚本 layout-default-width.js 把宿主自己的 rightbar
+   偏好归一化到 336px（宿主最小 300px、最大视口 70%），CSS 不再覆盖宽度；
+   三栏因此恢复原生拖动，默认仍与设计稿一致。 */
+
+/* 归一化期间先把右栏藏起来，避免 720px→336px 的一帧宽度跳变 */
+body.dsh-tavern-layout-normalizing [data-sidebar-right-panel][data-sidebar-right-open] {
+  visibility: hidden !important;
+}
+
+/* 4.2 右栏底色 */
+.dsh-tavern-status-dashboard { background: var(--bg) !important; }
+
+/* 4.2b 其它面板根底色统一到 --bg。
+   宿主插件里所有面板根都用 `--dsw-specific-sidebar-fill`（原先更黄的 #F1EBDF），
+   与「酒馆状态」的 `--bg`（#FAF9F5，作者原版中性底）不是一个底。这里逐个点名根容器；
+   现由 `--sidebar-fill` 统一成 #FAF9F5（D028 降黄后不再保留左栏暖底）。 */
+aside.dsh-tavern-status,
+.dsh-tavern-status,
+.dsh-tavern-library,
+.dsh-tavern-resources,
+.dsh-tavern-presets,
+.dsh-tavern-user-profile,
+.dsh-tavern-transfer,
+.dsh-local-settings,
+.dsh-tavern-status.dsh-tavern-card-detail {
+  background: var(--bg) !important;
+}
+
+/* 4.3 宿主标签栏 → 设计稿 .panel-tabs：无胶囊、14px、安静图标
+   注意：宿主的 stripTabs 本来就是横向滚动容器（overflow-x:auto、隐藏滚动条）；
+   这里把间距收紧，让常见 3 个标签能直接放下，更多标签靠滑动 + JS 保证选中项可见。 */
+[data-dockkit-strip] {
+  height: auto !important;
+  padding: 14px 10px 0 !important;
+  gap: 8px !important;
+  border-bottom: 0 !important;
+}
+[data-dockkit-strip] [data-dockkit-strip-tabs] {
+  gap: 10px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  scrollbar-width: none;
+}
+[data-dockkit-tab] {
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  /* 右侧给关闭 × 预留位置：宿主把它 absolute 定位在 right:4px / 16px 宽，
+     不留白就会压在标题最后一个字上（用户报「关闭按钮错位」）。 */
+  padding: 2px 22px 2px 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  white-space: nowrap;
+  color: var(--text-secondary) !important;
+}
+[data-dockkit-tab][aria-selected="true"] {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+/* 标签页的关闭 ×：默认安静，hover/选中时浮现（保留功能，不做删除）
+   —— 绝对定位在标签右侧预留的 22px 槽里，垂直居中。 */
+[data-dockkit-tab] [class*="_tabClose"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  top: 50% !important;
+  right: 3px !important;
+  transform: translateY(-50%);
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  opacity: 0;
+  transition: opacity .15s ease-out, background .15s ease-out, color .15s ease-out;
+}
+[data-dockkit-tab]:hover [class*="_tabClose"],
+[data-dockkit-tab][aria-selected="true"] [class*="_tabClose"] { opacity: .75; }
+[data-dockkit-tab] [class*="_tabClose"]:hover { opacity: 1 !important; background: var(--accent-soft) !important; color: var(--accent) !important; }
+/* 「＋ 新标签页」：功能入口，恢复显示，做成安静的 icon 按钮 */
+[data-dockkit-add-tab] {
+  display: inline-flex !important;
+  flex: none !important;
+  align-items: center;
+  justify-content: center;
+  width: 24px !important;
+  height: 24px !important;
+  margin-left: 2px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--r-sm) !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  cursor: pointer;
+  transition: background .15s ease-out, color .15s ease-out;
+}
+[data-dockkit-add-tab]:hover { background: rgba(var(--warm-ink-rgb),.06) !important; color: var(--accent) !important; }
+[data-dockkit-add-tab] svg { width: 13px !important; height: 13px !important; }
+[data-dockkit-split-button] { display: none !important; }
+[data-dockkit-strip] [class*="_stripChrome"] { gap: 4px !important; margin-left: auto !important; }
+[data-dockkit-strip] .P3OORG_iconButton {
+  width: 24px !important; height: 24px !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* 4.4 酒馆状态页：头卡 */
+.dsh-tavern-status-dashboard > .dsh-tavern-status-head {
+  margin: 4px 14px 12px !important;
+  padding: 16px !important;
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-role {
+  font-family: var(--font-serif) !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em !important;
+  line-height: 1.5 !important;
+  color: var(--text-primary) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-resource-links { gap: 16px !important; margin-top: 10px !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-status-resource-links > button {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--accent) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-tags { gap: 8px !important; margin-top: 12px !important; margin-bottom: 2px !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-status-tag {
+  padding: 3px 10px !important;
+  border-radius: var(--r-sm) !important;
+  background: var(--bg-sunken) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-tag:first-child {
+  background: var(--accent-soft) !important;
+  color: var(--accent-hover) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-settle {
+  margin-top: 12px !important;
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  gap: 7px !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-settle .dsh-tavern-status-dot,
+.dsh-tavern-status-dashboard .dsh-tavern-status-dot {
+  width: 7px !important; height: 7px !important;
+}
+
+/* 4.5 酒馆状态页：正文区（调试卡 / 后台任务 / 书卡） */
+.dsh-tavern-status-dashboard > .dsh-tavern-status-body {
+  padding: 0 14px 14px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-section {
+  margin: 0 !important;
+  padding: 16px !important;
+  /* 与 `.dsh-tavern-info-card` 同一层「白光泽」材质：所有卡视觉重量一致 */
+  background: linear-gradient(180deg, rgba(var(--white-rgb),.55), rgba(var(--white-rgb),.10)), var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.04), 0 6px 16px -12px rgba(var(--warm-ink-rgb),.18) !important;
+}
+/* 统一内边距（Guide 等特殊卡不再单独 16 与其他 14/15 混用） */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section { padding: 14px 15px !important; }
+
+/* ⚠ dream-skin（皮肤插件）会把「带 textarea 的卡片」误标成 composer，
+   给它加上一层 `[data-dsh-dream-skin-composer]::before` 毛玻璃覆盖，
+   底色 = 面板色 —— 结果就是白色卡片被盖成奶油色（Guide 卡「看起来和底色一样」的真凶）。
+   酒馆状态里的内容卡不需要这层覆盖，一律去掉。 */
+.dsh-tavern-status-dashboard .dsh-tavern-status-section::before,
+.dsh-tavern-status-dashboard .dsh-tavern-status-section[data-dsh-dream-skin-composer]::before {
+  content: none !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-support {
+  font-size: 13px !important;
+  line-height: 1.75 !important;
+  color: var(--text-secondary) !important;
+  gap: 10px !important;
+}
+.dsh-tavern-debug-open {
+  padding: 9px 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border: 1px solid var(--accent-ring) !important;
+  border-radius: var(--r-md) !important;
+  background: transparent !important;
+  color: var(--accent) !important;
+}
+.dsh-tavern-debug-open:hover { background: var(--accent-soft) !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-status-label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+}
+
+/* 4.6 书页预览卡：外框做成设计稿 .book-card */
+.dsh-tavern-status-dashboard .dsh-tavern-status-runtime {
+  background: var(--bg-inset) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  padding: 16px 16px 14px !important;
+  overflow: hidden !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-status-runtime .dsh-tavern-panel-toolbar {
+  padding: 0 0 4px !important;
+  justify-content: flex-end;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-panel-refresh {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  opacity: .8;
+}
+
+
+/* ==========================================================================
+   5. 中栏补丁（据 work/research/messages.md §6.1，已在真实页面验证）
+   ========================================================================== */
+
+/* 5.1 引号/斜体高亮回归 secondary 灰（highlight 样式表后加载，必须 !important） */
+::highlight(dsh-tavern-text-quote-light),
+::highlight(dsh-tavern-text-quote-dark),
+::highlight(dsh-tavern-text-em-light),
+::highlight(dsh-tavern-text-em-dark) { color: var(--text-secondary) !important; }
+
+/* 5.2 导出按钮与“酒馆状态”同款 chip */
+.dsh-tavern-header-item :is(.dsh-tavern-btn, .dsh-tavern-export-action) {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 32px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  transition: background .15s ease-out, border-color .15s ease-out, color .15s ease-out;
+}
+.dsh-tavern-header-item :is(.dsh-tavern-btn, .dsh-tavern-export-action) > svg {
+  width: 24px; height: 24px;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  transition: background .15s ease-out, color .15s ease-out;
+}
+.dsh-tavern-header-item :is(.dsh-tavern-btn, .dsh-tavern-export-action):hover {
+  background: var(--bg-raised);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.dsh-tavern-header-item :is(.dsh-tavern-btn, .dsh-tavern-export-action):hover > svg {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 5.3 去掉 tab 栏上方宿主多出的一条 1px 分隔线 */
+[class*="_header"]:has([data-conversation-tabs]) { border-bottom: 0 !important; }
+
+/* 5.4 恢复“完全权限”文字（宿主 460px 容器查询会隐藏它） */
+[data-slot="conversation.input.permission"] [class*="triggerLabel"] { display: inline !important; }
+
+/* 5.5 消息流 28/40/12：flow 插槽是 display:contents，padding 必须落在滚动容器 */
+[class*="_scroll"]:has(> [class*="_column"] > [data-slot="conversation.chat.flow"]) {
+  padding: 28px 40px 12px !important;
+}
+
+/* 5.6 输入区字体与占位符 */
+[data-composer-card] [data-composer-input] { font-family: var(--font-sans) !important; }
+[data-composer-placeholder] { color: var(--text-muted) !important; left: 16px !important; top: 14px !important; }
+
+/* 5.7 底部状态条：去 pill 底、mono 11.5 muted */
+[data-slot="conversation.composer.dock"] [class*="_pill"] {
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: var(--text-muted) !important;
+  font: 11.5px/1.4 var(--font-mono) !important;
+}
+
+/* 5.8 发送键去掉宿主的 2px 上移 */
+[data-composer-card] .uV2eYG_primary { transform: none !important; }
+
+
+/* ==========================================================================
+   6. 精修对齐
+   ========================================================================== */
+
+/* 6.1 顶栏 chip 之间的细分隔线（设计稿 .head-actions .divider） */
+[data-header-item="header:export"]::before {
+  content: "";
+  align-self: center;
+  width: 1px;
+  height: 16px;
+  margin: 0 8px 0 4px;
+  background: var(--border-strong);
+}
+
+/* 6.2 右栏：把宿主标签栏做成设计稿卡片内的 .panel-tabs（与状态卡拼成一张卡） */
+[data-dockkit-strip] {
+  margin: 12px 14px 0 !important;
+  padding: 12px 16px 10px !important;
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-bottom: 0 !important;
+  border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+}
+.dsh-tavern-status-dashboard > .dsh-tavern-status-head {
+  margin-top: 0 !important;
+  border-top: 0 !important;
+  border-radius: 0 0 var(--r-lg) var(--r-lg) !important;
+}
+.dsh-tavern-status-dashboard {
+  padding-top: 0 !important;
+}
+
+/* 6.3 右栏标签栏：标签文字不省略（标题本身不裁），溢出交给横向滚动。
+   注意：这里**不能**把 tabs 容器设成 overflow:visible —— 那会关掉宿主的横向
+   滚动容器，多标签时后面的标签直接溢出面板被裁掉（曾经的「Skill 库 半截」）。 */
+[data-dockkit-strip] { padding: 12px 10px 10px !important; gap: 8px !important; }
+[data-dockkit-strip] [data-dockkit-strip-tabs] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+}
+[data-dockkit-tab] { flex: 0 0 auto !important; }
+[data-dockkit-tab] [class*="_tabTitle"],
+[data-dockkit-tab] [class*="_tabTitle"] * { overflow: visible !important; text-overflow: clip !important; }
+/* 溢出时两侧渐隐，避免看见「半个字」被硬切（由 layout-defaults.js 打标记） */
+[data-dockkit-strip-tabs][data-tv-fade-left]:not([data-tv-fade-right]) {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px);
+}
+[data-dockkit-strip-tabs][data-tv-fade-right]:not([data-tv-fade-left]) {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent 100%);
+}
+[data-dockkit-strip-tabs][data-tv-fade-left][data-tv-fade-right] {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+
+/* 6.4 消息流里的“小剧场”等入口 → 设计稿 speaker 标签（陶土浅底 pill） */
+[data-slot="conversation.chat.node"] .dsh-tavern-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px !important;
+  border: 0 !important;
+  border-radius: var(--r-sm) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent-hover) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: .03em;
+  box-shadow: none !important;
+}
+[data-slot="conversation.chat.node"] .dsh-tavern-btn:hover { background: rgba(var(--accent-rgb),.16) !important; }
+
+/* 6.5 版本行的“⋯”改成悬浮覆盖，不再占宽度（让版本标题和设计稿一样完整显示） */
+.dsh-tavern-history-group-items .dsh-tavern-side-row { position: relative; }
+.dsh-tavern-history-group-items .dsh-tavern-side-row-more {
+  position: absolute !important;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0 !important;
+  width: 22px !important; height: 22px !important;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  background: rgba(var(--raised-rgb),.92) !important;
+  color: var(--text-muted) !important;
+}
+
+/* 6.6 右栏标签标题的溢出淡出遮罩（宿主用来给关闭按钮让位）会切掉“态”字，去掉 */
+[data-dockkit-tab] [class*="_tabTitle"],
+[data-dockkit-tab] [class*="_tabTitle"] * {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* 6.7 版本行：当前项不要底色块（设计稿只有陶土字 + 陶土圆点） */
+.dsh-tavern-history-group-items .dsh-tavern-side-row.active {
+  background: transparent !important;
+}
+.dsh-tavern-history-group-items .dsh-tavern-side-row:hover {
+  background: rgba(var(--white-rgb),.55) !important;
+}
+
+/* 6.8 左栏底部：一行版本号 + 悬浮才出现的“检查更新” */
+.dsh-tavern-update {
+  margin-top: auto !important;
+  padding: 10px 12px 4px !important;
+  border-top: 1px solid var(--border) !important;
+}
+.dsh-tavern-update-row { display: flex; align-items: center; gap: 8px; }
+.dsh-tavern-update-identity {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-update-actions {
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity .15s ease-out;
+}
+.dsh-tavern-update:hover .dsh-tavern-update-actions,
+.dsh-tavern-update:focus-within .dsh-tavern-update-actions { opacity: 1; }
+.dsh-tavern-update-button {
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+[data-slot="settings.launcher"] button {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+/* ==========================================================================
+   7. 与设计稿逐项对齐（用 tools/compare.mjs 量出来的差值）
+   ========================================================================== */
+
+/* 7.1 左栏贴边：宿主给侧栏根节点加了 padding，导致内容整体右移 12px、窄 12px */
+body.dsh-tavern-shell-active .hHd-Xa_root { padding: 0 !important; }
+body.dsh-tavern-shell-active .hHd-Xa_regionArea {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.dsh-tavern-sidebar { width: 100% !important; }
+
+/* 7.2 行高对齐设计稿（设计稿正文 15px/1.6） */
+.dsh-tavern-sidebar { font-size: 15px; line-height: 1.6; }
+.dsh-tavern-side-title { line-height: 1.6 !important; }
+.dsh-tavern-history-group-name { line-height: 1.6 !important; }
+.dsh-tavern-history-group-sub { line-height: 1.6 !important; }
+.dsh-tavern-history-group-items .dsh-tavern-side-row-main { line-height: 1.6 !important; }
+[data-slot="conversation.session.header"] [class*="_crumbCurrent"] { line-height: 1.6 !important; }
+[data-slot="conversation.session.header"] button[class*="_tab"] { line-height: 20px !important; }
+.dsh-tavern-status-tag { line-height: 1.6 !important; }
+aside.dsh-tavern-status-dashboard { font-size: 15px; line-height: 1.6; }
+
+/* 7.3 消息列宽：宿主把对话列锁在 680px，设计稿是 780px */
+body.dsh-tavern-shell-active [class*="_scroll"] > [class*="_column"] {
+  max-width: 780px !important;
+}
+
+/* 7.4 余下小差值 */
+.dsh-tavern-side-title { line-height: 1.6 !important; }
+.dsh-tavern-history-action { line-height: 1.6 !important; }
+.dsh-tavern-history-group-items .dsh-tavern-side-row-meta > span:last-child { letter-spacing: .01em; }
+[data-composer-card] [contenteditable="true"] { min-height: 48px !important; }
+[data-composer-card] .uV2eYG_primary { padding: 0 !important; display: grid !important; place-items: center !important; }
+
+/* 7.5 输入区高度对齐设计稿（.input-text 66px = 上下 padding + 48 内容） */
+[data-composer-card] [contenteditable="true"] {
+  min-height: 66px !important;
+  box-sizing: border-box !important;
+}
+
+/* 7.6 节标题行高与设计稿一致（去掉按钮自带的上下 padding 造成的 3px 差） */
+.dsh-tavern-history-action { padding: 0 4px !important; }
+/* 历史标题行改为垂直居中（左侧标题行现在带发丝分隔线，baseline 会偏） */
+.dsh-tavern-side-title:not(.dsh-tavern-history-heading) { align-items: baseline !important; }
+.dsh-tavern-history-heading { align-items: center !important; }
+
+/* 7.7 输入坞去除宿主的左右 16px 内缩，让输入卡和正文列等宽（1440 视口下差 32px） */
+body.dsh-tavern-shell-active .uV2eYG_root { padding-left: 0 !important; padding-right: 0 !important; }
+
+/* 7.8 展开版本列表时的入场动画（设计稿 .versions：220ms 内淡入/位移，不做弹跳） */
+@keyframes tv-fade-rise {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: none; }
+}
+.dsh-tavern-history-group-items { animation: tv-fade-rise .18s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .dsh-tavern-history-group-items { animation: none; }
+}
+
+/* 7.9 把宿主“设置”按钮浮到版本号同一行右侧（设计稿 .side-footer 一行） */
+body.dsh-tavern-shell-active [data-slot="sidebar.settings"] > * {
+  position: fixed !important;
+  left: auto !important;
+  right: 12px !important;
+  bottom: 18px !important;
+  width: auto !important;
+  z-index: 60;
+}
+body.dsh-tavern-shell-active [data-slot="sidebar.settings"] > * > * { width: auto !important; margin: 0 !important; }
+body.dsh-tavern-shell-active [data-slot="settings.launcher"] button {
+  width: auto !important;
+  padding: 4px 8px !important;
+  border-radius: var(--r-sm) !important;
+}
+body.dsh-tavern-shell-active [data-slot="settings.launcher"] button:hover { background: var(--bg-sunken) !important; }
+
+/* 7.10 修正：设置按钮要贴在侧栏右下（不是窗口右下），折叠侧栏时还原成宿主默认位置
+   左栏可拖动后不能写死 206px：宽度由脚本发布成 --dsh-tavern-sidebar-w（默认 280）。 */
+body.dsh-tavern-shell-active [data-slot="sidebar.settings"] > * {
+  position: fixed !important;
+  left: calc(var(--dsh-tavern-sidebar-w, 280px) - 74px) !important;
+  right: auto !important;
+  bottom: 15px !important;
+  width: auto !important;
+  z-index: 60;
+}
+body.dsh-tavern-shell-active:has(.dsh-tavern-sidebar.collapsed) [data-slot="sidebar.settings"] > * {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* 7.11 子智能体 chip：按设计稿在文字前补一个线性人像图标（纯装饰，不改交互） */
+button[aria-label*="子智能体"]::before {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='3.2'/%3E%3Cpath d='M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='3.2'/%3E%3Cpath d='M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ==========================================================================
+   8. 卡片模式的左栏：历史条复用「游玩」模式的玻璃故事卡格式
+   —— 游玩模式的条目包在 .dsh-tavern-history-group（卡片）里，
+      卡片模式直接是裸 .dsh-tavern-side-row（没有卡片外观）。这里把裸行
+      补齐成同一套卡片：12px 圆角、玻璃底、边框、阴影、衬线标题 + 弱化副行。
+   ========================================================================== */
+.dsh-tavern-side-list > .dsh-tavern-side-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 11px 12px 11px 14px;
+  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  transition: border-color .15s ease-out, background .15s ease-out;
+}
+.dsh-tavern-side-list > .dsh-tavern-side-row:hover { border-color: rgba(var(--accent-rgb),.30); }
+.dsh-tavern-side-list > .dsh-tavern-side-row.active {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.11), rgba(var(--white-rgb),.42));
+  border-color: var(--accent-ring);
+}
+/* 行内「⋯」菜单要浮到相邻卡片之上（列表本身仍可滚动） */
+.dsh-tavern-side-list > .dsh-tavern-side-row:has(.dsh-tavern-side-row-menu) { z-index: 6; }
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-main {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 !important;
+  text-align: left;
+  background: transparent !important;
+}
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-name {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 3px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-meta > span:first-child { flex: 0 1 auto; }
+/* 副行沿用设计稿「状态 · 日期」的点分隔（游玩卡片是「N 个版本 · 更新于 …」） */
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-meta > span:first-child::after { content: "·"; margin-left: 6px; }
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-meta > span:last-child { flex: none; }
+.dsh-tavern-side-list > .dsh-tavern-side-row .dsh-tavern-side-row-more {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   9. 右栏「信息卡」语言（工况 / 状态类小卡）
+   —— 统一结构：图标徽章 + 标题 + 右侧动作或时间 + 状态行 / 说明行。
+      图标徽章 24px 圆角 7px 浅陶土底；标题走衬线 14.5/600；说明 12.5 次级灰。
+      目标：格子本身立得住（浅底、细描边、14px 圆角、内高光），
+            里面的信息有层级，而不是一句话挤在一起。
+   ========================================================================== */
+.dsh-tavern-status-dashboard .dsh-tavern-info-card {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+  position: relative;
+  background: linear-gradient(180deg, rgba(var(--white-rgb),.55), rgba(var(--white-rgb),.10)), var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.04), 0 6px 16px -12px rgba(var(--warm-ink-rgb),.18) !important;
+  padding: 14px 15px !important;
+}
+.dsh-tavern-info-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.dsh-tavern-info-card-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.13);
+}
+.dsh-tavern-info-card-icon svg { width: 14px; height: 14px; display: block; }
+.dsh-tavern-info-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em;
+  line-height: 1.45;
+  color: var(--text-primary) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsh-tavern-info-card-meta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+}
+.dsh-tavern-info-card-action {
+  flex: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 3px;
+  width: auto !important;
+  margin-left: auto;
+  box-sizing: border-box;
+  padding: 2px 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--accent) !important;
+  cursor: pointer;
+}
+.dsh-tavern-info-card-action:hover { color: var(--accent-hover) !important; }
+.dsh-tavern-info-card-arrow { width: 12px; height: 12px; transition: transform .16s ease-out; }
+.dsh-tavern-info-card-action:hover .dsh-tavern-info-card-arrow { transform: translate(1px, -1px); }
+.dsh-tavern-info-card-body {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  min-width: 0;
+}
+.dsh-tavern-info-card-dot {
+  flex: none;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.dsh-tavern-info-card-dot.idle { background: var(--live-green); box-shadow: 0 0 0 3px rgba(var(--live-green-rgb),.14); }
+.dsh-tavern-info-card-dot.busy { background: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),.14); }
+.dsh-tavern-info-card-dot.error { background: #C34F4F; box-shadow: 0 0 0 3px rgba(195,79,79,.14); }
+.dsh-tavern-info-card-status {
+  min-width: 0;
+  font-size: 12.5px;
+  letter-spacing: .01em;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.dsh-tavern-info-card-text {
+  margin: 9px 0 0;
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: var(--text-secondary) !important;
+  overflow-wrap: anywhere;
+}
+.dsh-tavern-info-card-text.is-error { color: #A9503C !important; }
+.dsh-tavern-info-card-text.is-warn { color: var(--accent-hover) !important; }
+.dsh-tavern-info-card-btn {
+  align-self: flex-start;
+  margin-top: 10px !important;
+  padding: 7px 12px !important;
+  font-size: 12px !important;
+  border-radius: var(--r-md) !important;
+}
+/* 调试卡 / 后台等待卡：图标 + 标题 + 说明 + 整宽按钮，垂直间距统一 10 */
+.dsh-tavern-status-dashboard .dsh-tavern-info-card--support,
+.dsh-tavern-status-dashboard .dsh-tavern-info-card--wait {
+  gap: 10px !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-info-card--support .dsh-tavern-info-card-text,
+.dsh-tavern-status-dashboard .dsh-tavern-info-card--wait .dsh-tavern-info-card-text { margin: 0; }
+.dsh-tavern-info-card--support .dsh-tavern-debug-open {
+  width: 100% !important;
+  margin: 0 !important;
+}
+.dsh-tavern-info-card--wait .dsh-tavern-choice-trigger { align-self: flex-start; }
+
+/* 9.1 右栏所有卡片的「节标题」统一成信息卡标题的排版声音（衬线 14.5/600） */
+.dsh-tavern-status-dashboard .dsh-tavern-status-label {
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  line-height: 1.45 !important;
+  color: var(--text-primary) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-caption,
+.dsh-tavern-status-dashboard .dsh-tavern-status-label > span {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+}
+/* 卡片里的说明 / 空态文字统一 12.5，行高 1.7 */
+.dsh-tavern-status-dashboard .dsh-tavern-status-empty,
+.dsh-tavern-status-dashboard .dsh-tavern-settings-desc {
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: var(--text-secondary) !important;
+}
+/* 9.2 卡内元素：来源标签 / 按钮组 / 引用 */
+.dsh-tavern-info-card-source {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+  font-size: 11.5px;
+  letter-spacing: .01em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 书摘署名：右对齐的一行小字（在引用块下方） */
+.dsh-tavern-info-card-source--attribution {
+  display: block;
+  max-width: none;
+  margin-top: 6px;
+  text-align: right;
+  font-size: 11.5px;
+}
+.dsh-tavern-info-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dsh-tavern-info-card-actions .dsh-tavern-info-card-btn { margin-top: 0 !important; }
+/* 卡内按钮统一交给第 10 节的三档规格，这里不再单独覆写尺寸 */
+/* 文风联想：引用块做成卡片内的「书摘」 */
+.dsh-tavern-status-dashboard .dsh-tavern-style-section .dsh-tavern-style-reference {
+  margin: 10px 0 0 !important;
+  padding: 9px 0 9px 12px !important;
+  border-left: 2px solid rgba(var(--accent-rgb),.28);
+  font-family: var(--font-serif) !important;
+  font-size: 13px !important;
+  line-height: 1.85 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-style-section .dsh-tavern-style-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-style-section .dsh-tavern-style-retry {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-style-section .dsh-tavern-style-retry:hover:not(:disabled) { color: var(--accent) !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-style-section .dsh-card-primary {
+  border-radius: var(--r-md) !important;
+  font-size: 12.5px !important;
+  padding: 7px 12px !important;
+}
+/* 舞台卡只有一行动作，收一点高度 */
+.dsh-tavern-status-dashboard .dsh-tavern-info-card--stage { padding: 12px 15px !important; }
+
+/* 9.3 Guide 卡的次级动作（打开/保存到 Guide 库）统一成描边小胶囊，
+   不再是没有边界的一行陶土文字；与「交给调试 Agent」同一形态。 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-actions { gap: 8px !important; margin: 12px 0 !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-guide-actions > button {
+  flex: none !important;
+  min-height: 32px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  color: var(--accent) !important;
+  background: transparent !important;
+  border: 1px solid var(--accent-ring) !important;
+  border-radius: var(--r-md) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-actions > button:hover:not(:disabled) { background: var(--accent-soft) !important; }
+/* Guide / 人物设计 / 台账 card 内的说明与正文行高统一 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-text { font-size: 12.5px !important; line-height: 1.7 !important; }
+
+/* 9.5 Guide 卡内部与其它内容卡对齐：
+   —— 说明 12.5 次级灰、条目 12.5 次级灰（不再 15px 主文字色）、去掉贯穿的分隔线、
+      节奏统一成 8/10px，控件（Guide 库按钮 / 输入框 / 主按钮）同一套材质。 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-settings-desc {
+  margin: 0 0 8px !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-destinations {
+  margin: 0 0 10px !important;
+  font-size: 12px !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-destinations > summary {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  padding: 2px 0 !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-list {
+  gap: 8px !important;
+  margin: 0 !important;
+}
+/* 每条 Guide = 行级卡（与库列表里的绑定卡同一规格），不再是裸文字 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-item {
+  padding: 10px 12px !important;
+  gap: 10px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--bg-raised) !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.04) !important;
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-text {
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: var(--text-secondary) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-actions {
+  margin: 10px 0 0 !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-add {
+  margin-top: 10px !important;
+  gap: 8px !important;
+}
+/* 输入框与设置面板里的输入框同一材质（凹陷暖底），不再白底浮在白卡上 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-add textarea {
+  margin: 0 !important;
+  min-height: 68px !important;
+  background: var(--bg-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  color: var(--text-primary) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-add textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+/* Guide 卡里最后一个动作按钮贴右下，与其它卡的按钮节奏一致 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section .dsh-tavern-guide-add > .dsh-card-primary {
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+/* 9.4 台账 / MVU 卡头：标题走信息卡标题（衬线 14.5/600），右侧「查看/收起」变成陶土动作，
+      轮次用等宽小字，与后台任务卡的「打开 ↗」同一套动作语言。 */
+.dsh-tavern-status-dashboard .dsh-ledger-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  line-height: 1.45 !important;
+  color: var(--text-primary) !important;
+  text-align: left;
+  cursor: pointer;
+}
+.dsh-tavern-status-dashboard .dsh-ledger-toggle > span {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-sans) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: .01em !important;
+  color: var(--accent) !important;
+  opacity: 1 !important;
+  transition: color .16s ease-out;
+}
+.dsh-tavern-status-dashboard .dsh-ledger-toggle:hover > span { color: var(--accent-hover) !important; }
+.dsh-tavern-status-dashboard .dsh-mvu-floor {
+  flex: none !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   10. 全侧栏统一「内容项卡片 + 按钮」设计语言（跨面板，不只酒馆状态）
+   --------------------------------------------------------------------------
+   卡片材质（两种尺寸）：
+     · 内容卡 .tv-card  = 14px 圆角 / 15-16px 内边距 / 白 55%→10% 微光泽叠 raised 底
+     · 行级卡 .tv-row   = 12px 圆角 / 10-12px 内边距，同材质（用于库列表、绑定行）
+   按钮三档（只此三档，禁止再出现第四种）：
+     T1 主操作  = 实心陶土（每张卡最多一个）  8px 14px / 12.5px 600 / r10
+     T2 次要    = 陶土描边胶囊              6px 12px / 12px 500   / r10
+     T3 行内动作 = 陶土文字（无底无边）       12.5px 500 / hover 下划线
+   危险操作：T2 描边换成暖红描边；T3 文字走暖红。
+   ========================================================================== */
+
+/* 10.1 内容卡（顶层内容块） */
+:is(
+  .dsh-tavern-card-detail > .dsh-tavern-status-head,
+  .dsh-tavern-card-detail-organization,
+  .dsh-tavern-script-hero,
+  .dsh-tavern-card-field,
+  .dsh-tavern-worldbook-bindings,
+  .dsh-tavern-profile-default,
+  .dsh-tavern-profile-library,
+  .dsh-tavern-user-profile-text,
+  .dsh-tavern-gs-card,
+  .dsh-local-section,
+  .dsh-tavern-settings-group
+) {
+  border-radius: var(--r-lg) !important;
+  background: linear-gradient(180deg, rgba(var(--white-rgb),.55), rgba(var(--white-rgb),.10)), var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.04), 0 6px 16px -12px rgba(var(--warm-ink-rgb),.18) !important;
+  padding: 14px 15px !important;
+}
+/* 行级卡（库/列表里的单条内容） */
+:is(
+  .dsh-tavern-worldbook-bound-card,
+  .dsh-tavern-preset-row,
+  .dsh-tavern-preset-entry,
+  .dsh-tavern-resource-row,
+  .dsh-tavern-background-run,
+  .dsh-tavern-character-design
+) {
+  border-radius: var(--r-md) !important;
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 1px 1px rgba(var(--warm-ink-rgb),.04) !important;
+  padding: 10px 12px !important;
+}
+/* 卡片标题统一（内容项名称） */
+:is(.dsh-tavern-script-hero-title, .dsh-tavern-worldbook-entry-head, .dsh-tavern-worldbook-group-title,
+   .dsh-tavern-gs-head h2, .dsh-tavern-settings-group-title,
+   .dsh-local-section > h3, .dsh-local-section > h2, .dsh-tavern-settings-group > h3) {
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  color: var(--text-primary) !important;
+}
+
+/* 10.2 T1 主操作：实心陶土（每张卡最多一个） */
+:is(
+  .dsh-card-primary,
+  .dsh-tavern-script-primary,
+  .dsh-tavern-btn.primary
+) {
+  border: 0 !important;
+  border-radius: var(--r-md) !important;
+  padding: 8px 14px !important;
+  min-height: 32px;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em;
+  box-shadow: 0 1px 1px rgba(120,52,24,.18), 0 4px 12px -4px rgba(var(--accent-rgb),.45) !important;
+  cursor: pointer;
+  transition: background .16s ease-out, box-shadow .16s ease-out, transform .16s ease-out;
+}
+:is(.dsh-card-primary, .dsh-tavern-script-primary, .dsh-tavern-btn.primary):hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 2px 2px rgba(120,52,24,.16), 0 8px 18px -6px rgba(var(--accent-rgb),.55) !important;
+}
+:is(.dsh-card-primary, .dsh-tavern-script-primary, .dsh-tavern-btn.primary):active:not(:disabled) { transform: translateY(1px); }
+:is(.dsh-card-primary, .dsh-tavern-script-primary, .dsh-tavern-btn.primary):disabled { opacity: .55; cursor: default; box-shadow: none !important; }
+
+/* 10.3 T2 次要操作：陶土描边胶囊 */
+:is(
+  .dsh-tavern-btn,
+  .dsh-tavern-debug-open,
+  .dsh-tavern-guide-actions > button,
+  .dsh-tavern-script-file,
+  .dsh-tavern-worldbook-add,
+  .dsh-tavern-worldbook-binding-confirm,
+  .dsh-tavern-update-button,
+  .dsh-tavern-header-btn,
+  .dsh-tavern-mvu-retry,
+  .dsh-tavern-choice-trigger
+) {
+  border: 1px solid var(--accent-ring) !important;
+  border-radius: var(--r-md) !important;
+  padding: 6px 12px !important;
+  min-height: 30px;
+  background: transparent !important;
+  color: var(--accent) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: .01em;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: background .16s ease-out, color .16s ease-out, border-color .16s ease-out;
+}
+:is(.dsh-tavern-btn, .dsh-tavern-debug-open, .dsh-tavern-guide-actions > button, .dsh-tavern-script-file,
+   .dsh-tavern-worldbook-add, .dsh-tavern-worldbook-binding-confirm, .dsh-tavern-update-button,
+   .dsh-tavern-header-btn, .dsh-tavern-mvu-retry, .dsh-tavern-choice-trigger):hover:not(:disabled) {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-hover) !important;
+}
+/* 按钮文字永不换行；头部动作按钮不参与收缩（否则窄面板里会出现「刷 / 新」两行） */
+:is(.dsh-tavern-btn, .dsh-tavern-debug-open, .dsh-tavern-guide-actions > button, .dsh-tavern-script-file,
+   .dsh-tavern-worldbook-add, .dsh-tavern-worldbook-binding-confirm, .dsh-tavern-update-button,
+   .dsh-tavern-header-btn, .dsh-tavern-mvu-retry, .dsh-tavern-choice-trigger,
+   .dsh-card-primary, .dsh-tavern-script-primary, .dsh-tavern-info-card-action) {
+  white-space: nowrap !important;
+}
+.dsh-tavern-status-head .dsh-tavern-btn,
+.dsh-tavern-status-head .dsh-tavern-header-btn { flex: 0 0 auto !important; }
+:is(.dsh-tavern-btn, .dsh-tavern-script-file, .dsh-tavern-worldbook-add, .dsh-tavern-worldbook-binding-confirm,
+   .dsh-tavern-update-button, .dsh-tavern-header-btn):disabled { opacity: .5; cursor: default; }
+
+/* 危险操作（删除类）：T2 换成暖红描边 */
+:is(.dsh-tavern-btn.danger, .dsh-tavern-btn.danger:hover:not(:disabled)) {
+  border-color: rgba(195,79,79,.38) !important;
+  color: #C34F4F !important;
+  background: transparent !important;
+}
+:is(.dsh-tavern-btn.danger):hover:not(:disabled) { background: rgba(195,79,79,.08) !important; border-color: rgba(195,79,79,.6) !important; }
+
+/* 10.4 T3 行内动作：陶土文字（无底无边；hover 下划线） */
+:is(
+  .dsh-tavern-info-card-action,
+  .dsh-ledger-toggle > span,
+  .dsh-tavern-style-retry,
+  .dsh-tavern-status-resource-links > button,
+  .dsh-tavern-worldbook-binding-link,
+  .dsh-tavern-guide-destinations button,
+  .dsh-tavern-history-action,
+  .dsh-tavern-btn.quiet,
+  .dsh-tavern-worldbook-del
+) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 2px 0 !important;
+  min-height: 0 !important;
+  border-radius: var(--r-sm) !important;
+  color: var(--accent) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: .01em;
+  cursor: pointer;
+  transition: color .16s ease-out;
+}
+:is(.dsh-tavern-info-card-action, .dsh-ledger-toggle > span, .dsh-tavern-style-retry,
+   .dsh-tavern-status-resource-links > button, .dsh-tavern-worldbook-binding-link,
+   .dsh-tavern-guide-destinations button, .dsh-tavern-history-action,
+   .dsh-tavern-btn.quiet):hover:not(:disabled) {
+  color: var(--accent-hover) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* 删除类行内动作：常态灰、hover 暖红 */
+.dsh-tavern-worldbook-del { color: var(--text-muted) !important; }
+.dsh-tavern-worldbook-del:hover:not(:disabled) { color: #C34F4F !important; text-decoration: underline; }
+
+/* 10.5 错误块也走卡片语言（暖红浅底 + 暖红描边），不再是一段裸露红字 */
+.dsh-tavern-status-dashboard .dsh-card-error {
+  border-radius: var(--r-lg) !important;
+  background: rgba(195,79,79,.055) !important;
+  border: 1px solid rgba(195,79,79,.22) !important;
+  padding: 13px 15px !important;
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: #A9503C !important;
+}
+.dsh-tavern-status-dashboard .dsh-card-error > div:first-child { margin-bottom: 8px; }
+
+/* 10.6 补齐「没有图标徽章」的卡头（Guide / 人物设计 / 台账 / MVU / 人物姿势）
+   —— 与信息卡同一套：24px 浅陶土徽章 + 衬线 14.5 标题。纯 CSS，不改组件。 */
+.dsh-tavern-status-dashboard .dsh-tavern-status-section > .dsh-tavern-status-label,
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section > .dsh-tavern-status-label,
+.dsh-tavern-status-dashboard .dsh-tavern-character-design-head .dsh-tavern-status-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: 24px;
+  margin-bottom: 10px !important;
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+  line-height: 1.45 !important;
+  color: var(--text-primary) !important;
+}
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section > .dsh-tavern-status-label { justify-content: flex-start !important; }
+.dsh-tavern-status-dashboard .dsh-tavern-guide-caption { margin-left: auto; }
+/* 后台任务页里的「进行中 / 最近完成」是卡内分组标题，不加徽章 */
+.dsh-tavern-status-dashboard.dsh-tavern-background-tasks .dsh-tavern-status-section > .dsh-tavern-status-label::before { content: none !important; }
+/* 默认徽章（兜底：还没单独配图标的卡） */
+.dsh-tavern-status-dashboard .dsh-tavern-status-section > .dsh-tavern-status-label::before,
+.dsh-tavern-status-dashboard .dsh-tavern-character-design-head .dsh-tavern-status-label::before {
+  content: "";
+  flex: none;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  background-color: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.13);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CC785C' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M12 4v16M4 12h16'/%3E%3C/svg%3E");
+}
+/* Guide：书本 */
+.dsh-tavern-status-dashboard .dsh-tavern-guide-section > .dsh-tavern-status-label::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CC785C' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.2c0-1.2 1-2.2 2.2-2.2H11v16H6.2A2.2 2.2 0 0 1 4 17.8z'/%3E%3Cpath d='M20 6.2c0-1.2-1-2.2-2.2-2.2H13v16h4.8a2.2 2.2 0 0 0 2.2-2.2z'/%3E%3C/svg%3E");
+}
+/* 人物设计档案：人像 */
+.dsh-tavern-status-dashboard .dsh-tavern-character-design-head .dsh-tavern-status-label::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CC785C' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='3.4'/%3E%3Cpath d='M4.8 20c.9-3.7 3.7-5.6 7.2-5.6s6.3 1.9 7.2 5.6'/%3E%3C/svg%3E");
+}
+/* 台账 / MVU 的折叠标题也是卡头 → 补徽章 */
+.dsh-tavern-status-dashboard .dsh-ledger-toggle::before,
+.dsh-tavern-status-dashboard .dsh-mvu-variables .dsh-ledger-toggle::before {
+  content: "";
+  flex: none;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  background-color: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.13);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CC785C' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M8 6.5h11M8 12h11M8 17.5h11'/%3E%3Ccircle cx='4.6' cy='6.5' r='.9' fill='%23CC785C' stroke='none'/%3E%3Ccircle cx='4.6' cy='12' r='.9' fill='%23CC785C' stroke='none'/%3E%3Ccircle cx='4.6' cy='17.5' r='.9' fill='%23CC785C' stroke='none'/%3E%3C/svg%3E");
+}
+.dsh-tavern-status-dashboard .dsh-mvu-variables .dsh-ledger-toggle::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CC785C' stroke-width='1.6' stroke-linecap='round'%3E%3Cellipse cx='12' cy='6' rx='7' ry='2.6'/%3E%3Cpath d='M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6'/%3E%3Cpath d='M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6'/%3E%3C/svg%3E");
+}
+/* 台账卡内容排版收敛 */
+.dsh-tavern-status-dashboard .dsh-ledger .dsh-tavern-status-empty,
+.dsh-tavern-status-dashboard .dsh-mvu-variables .dsh-tavern-status-empty { margin-top: 8px !important; }
+
+/* ==========================================================================
+   11. 输入框上方动作行（生成候选项 / 重新生成正文 / 更多 ▾）
+   设计稿没有这一行；功能入口保留（D014），但把三枚陶土描边胶囊降级为 12px 纯文字，
+   让输入坞回到设计稿的干净感。菜单本体沿用原样式，不受影响。
+   ========================================================================== */
+.dsh-tavern-dock-actions {
+  gap: 18px !important;
+  padding: 6px 12px 0 !important;
+}
+.dsh-tavern-dock-actions .dsh-tavern-choice-trigger {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-height: 0 !important;
+  padding: 2px 0 !important;
+  color: var(--text-secondary) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: .01em;
+  transition: color .16s ease-out !important;
+}
+.dsh-tavern-dock-actions .dsh-tavern-choice-trigger:hover:not(:disabled) {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--accent) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+
