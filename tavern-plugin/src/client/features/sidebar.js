@@ -1,7 +1,7 @@
 		function createTavernShellFeatureModule() {
 		// @include modules/host-compatibility.js
 		// @include modules/auto-open-tabs.js
-		// Entering a game opens its settings and status tabs (the 「进入游戏时打开酒馆状态」 setting, on by default).
+		// Entering a game opens its status and worldbook tabs (the 「进入游戏时打开酒馆状态」 setting, on by default).
 		// Only a switch to another game reopens them: readiness flickers while the session list refreshes
 		// (after the first turn, when the sidebar remounts), and reopening then would cover the tab the
 		// player brought forward, such as the stage.
@@ -12,6 +12,25 @@
 				const column = typeof ctx.get === "function" ? ctx.get("sidebarRight") : null;
 				if (column && typeof column.isExpanded === "function" && column.isExpanded() === false && typeof column.toggleExpanded === "function") column.toggleExpanded();
 			} catch (_) {}
+		}
+		// The strip appends each opened tab, so opening 酒馆状态 then 世界书库 leaves the worldbook page in
+		// front. Focus is a host call by tab id; retry a few frames until the layout records both tabs.
+		function focusTavernRightTab(ctx, kind, sessionId) {
+			let frames = 0;
+			function attempt() {
+				try {
+					const column = typeof ctx.get === "function" ? ctx.get("sidebarRight") : null;
+					if (!column) return;
+					const screen = typeof column.screen === "function" ? column.screen() : null;
+					if (screen && screen.sessionId !== sessionId) return; // the player already moved to another game
+					const surface = typeof column.mountedSurface === "function" ? column.mountedSurface() : null;
+					const tabs = surface && surface.layout ? Object.values(surface.layout.tabs || {}) : [];
+					const target = tabs.find(function (tab) { return tab && tab.kind === kind; });
+					if (target && typeof column.focus === "function") { column.focus(target.id); return; }
+				} catch (_) { /* host shape changed: leave the default focus alone */ }
+				if (++frames < 10) window.requestAnimationFrame(attempt);
+			}
+			window.requestAnimationFrame(attempt);
 		}
 		const tavernAutoOpenStatus = (function () {
 			let enabled = true, loaded = null;
@@ -1185,11 +1204,14 @@
 						if (!await tavernAutoOpenStatus.read()) { if (tavernSettingsTabsShownFor === sessionId) tavernSettingsTabsShownFor = ""; return; }
 						// The column already shows one of these pages (it was never closed, or the sidebar remounted):
 						// opening again expands the column and focuses the page, pulling it over the story for nothing.
-						if (tavernRightColumnShowing(ctx, ["dsh-tavern:conversation-settings", "dsh-tavern:status"])) return;
-						const opened = await openTavernSidebarTab(ctx, { type: "dsh-tavern:conversation-settings" }, { sessionId: sessionId }) && await openTavernSidebarTab(ctx, { type: "dsh-tavern:status" }, { sessionId: sessionId });
+						if (tavernRightColumnShowing(ctx, ["dsh-tavern:status", "dsh-tavern:worldbooks"])) return;
+						// Design: 酒馆状态 left, 世界书库 right, 酒馆状态 in front. A new tab lands at the end, so open
+						// in strip order and then move focus back to the status page.
+						const opened = await openTavernSidebarTab(ctx, { type: "dsh-tavern:status" }, { sessionId: sessionId }) && await openTavernSidebarTab(ctx, { type: "dsh-tavern:worldbooks" }, { sessionId: sessionId });
 						// Not opened (the player already moved on, or the host refused): try again next time this game is entered.
 						if (!opened) { if (tavernSettingsTabsShownFor === sessionId) tavernSettingsTabsShownFor = ""; return; }
 						expandTavernRightColumn(ctx);
+						focusTavernRightTab(ctx, "dsh-tavern:status", sessionId);
 					},
 					openCardLibraryTab: function (sessionId) { if (narrowLayout()) return closeNarrowSidebar(); return openTavernSidebarTab(ctx, { type: "dsh-tavern:cards", meta: null }, { sessionId: sessionId }); },
 					openPresetLibraryTab: function (sessionId) { if (narrowLayout()) return closeNarrowSidebar(); return openTavernSidebarTab(ctx, { type: "dsh-tavern:presets" }, { sessionId: sessionId }); },

@@ -114,7 +114,7 @@ function createGlobalSettingsModule({ React, rpc, notifySettingsChanged, TavernD
                     description: "打开后每轮会多一次后台请求：正文写完，酒馆在后台自动生成这一轮的候选项，不用再点「生成候选项」。只对打开后的新回复生效，失败时可手动重试。" }) : null),
             group("显示与交互", "对所有游戏生效，只改界面，不影响正文和存档。",
                 state.settings ? h(SettingSwitch, { settings: state.settings, name: "autoOpenStatusPanel", title: "进入游戏时打开酒馆状态",
-                    description: "进入或切换到一局游戏时，右侧面板自动展开并显示本局设置和酒馆状态。关闭后右侧面板保持你上次的样子。" }) : null,
+                    description: "进入或切换到一局游戏时，右侧面板自动展开并显示酒馆状态和世界书库。关闭后右侧面板保持你上次的样子。" }) : null,
                 h(CandidatePreferencesSettings),
                 // Most players never need this; it sits last, folded.
                 h(HeaderItemsSettings)),
